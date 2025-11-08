@@ -1,0 +1,260 @@
+# @codesynth-labs/quality
+
+Unified quality suite for the Forge Platform monorepo. The package ships the `quality` CLI, a declarative pipeline runner, built-in adapters for linting/validation, JSON schema tooling, and fixtures/tests. Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json`, `.qualityrc.jsonc`, `.qualityrc.ts`, and `.qualityrc.(mjs|cjs)` so teams can use comments/trailing commas or TypeScript when needed.
+
+## Core concepts
+
+- **Stage adapters** – Modules that implement a single responsibility (Biome, import hygiene, filenames, structure, bun-native, no-root-barrel, command, etc.). Adapters expose metadata (label, description, supported modes) and an execution hook.
+- **Presets** – Named option bundles defined per adapter under `stages.<adapter>.presets`. Presets can extend other presets (single or multiple inheritance) and configure defaults such as groups, modes, hooks, and adapter options.
+- **Profiles** – Named pipelines that order stages, set reporters, and attach hooks. Profiles can extend one another, allowing “local” and “ci” variants with small diffs.
+- **Groups** – Stages can join a group to opt into parallel execution, fail-fast semantics, or shared metadata.
+- **Hooks & reporters** – Declarative shell commands that run on start/success/failure, and reporters (summary/json/junit/verbose) that consume pipeline results.
+- **Schema-first** – `packages/tooling/quality/schemas/qualityrc.schema.json` models the entire configuration surface so editors and CI can validate configs.
+
+## Legacy configuration migration
+
+Earlier revisions shipped standalone JSON allowlists under `config/` alongside a deprecated `gates` block in the root `.qualityrc`. The stage catalog now owns those rules directly. When migrating existing repositories:
+
+| Legacy JSON | Replacement |
+| --- | --- |
+| `config/import-extension-allowlist.json` | `stages.imports.presets.workspace.options.allowlist` |
+| `config/bun-node-import-allowlist.json` | `stages."bun-native".presets.workspace.options.allowlist` |
+| `config/test-filename-rules.json` | `stages.filenames.presets.workspace.options` (patterns/ignore/etc.) |
+
+CLI shims that previously forwarded `quality check --gate <name>` now dispatch via `--stage <name>` so every workflow goes through the stage-based pipeline.
+
+## Getting started
+
+1. Ensure dependencies are installed: `bun install` at the repo root.
+2. Generate a starter configuration: `bun --bun packages/tooling/quality/src/cli/index.ts init` (or `bun run quality:init`). The template demonstrates presets, command stages, and grouped adapters.
+3. Reference the schema inside `.qualityrc` files to enable editor IntelliSense:
+
+```jsonc
+{
+  "$schema": "./packages/tooling/quality/schemas/qualityrc.schema.json",
+  "stages": {
+    "command": {
+      "presets": {
+        "docs:check": {
+          "continueOnError": true,
+          "options": {
+            "abortPipelineOnFailure": false,
+            "commands": ["bun run docs:lint"]
+          }
+        }
+      }
+    }
+  },
+  "profiles": {
+    "local": {
+      "pipeline": [
+        { "id": "lint:biome", "type": "biome", "preset": "recommended" },
+        { "id": "lint:imports", "type": "imports", "group": "lint" },
+        { "id": "docs:check", "type": "command", "preset": "docs:check" }
+      ],
+      "reporters": ["summary"],
+      "hooks": { "onStart": ["echo '🔍 quality checks'"] }
+    },
+    "ci": {
+      "extends": "local",
+      "pipeline": [
+        {
+          "id": "ci:no-root-barrel",
+          "type": "no-root-barrel",
+          "overrides": { "packages": ["packages/*"] }
+        }
+      ],
+      "reporters": [
+        "summary",
+        ["json", { "path": "reports/quality.json" }]
+      ]
+    }
+  }
+}
+```
+
+Create additional `.qualityrc` files inside packages to extend/override stages for that subtree. The loader walks upward from the file(s) being linted, merging presets, profiles, hooks, and adapter registrations.
+
+## Configuration reference
+
+### Git hooks & CI targets
+
+`.qualityrc` can manage Git hook automation and declarative CI entry points:
+
+```jsonc
+{
+  "gitHooks": {
+    "manage": true,
+    "hooks": {
+      "pre-commit": {
+        "stages": ["lint:biome"],
+        "filesMode": "staged",
+        "autoFix": { "enabled": true, "safety": "confirm" }
+      }
+    }
+  },
+  "ciTargets": {
+    "github:pr": {
+      "profile": "ci",
+      "filesMode": "commits",
+      "env": { "CI": "1" },
+      "matrix": { "node": ["20"], "os": ["ubuntu-latest"] }
+    }
+  }
+}
+```
+
+- `quality hooks install` materialises hook scripts under `.git/hooks/*` (only when `manage` is true). Scripts are idempotent, include a marker header, and call back into `quality git-hook <name>`.
+- `quality git-hook <name>` runs the configured stages in hook context, respecting auto-fix policies and safeguards inherited from Phase 1.
+- `quality ci run <target>` executes the shared context runner with either workspace changes or a commit diff (resolved from `QUALITY_CI_*`/GitHub/GitLab env vars).
+- `quality ci emit` renders starter YAML for GitHub Actions (`--format github`), GitLab (`gitlab`), or a generic runner (`generic`).
+- `autoFix.enabled` defaults to `false` for CI targets; enabling it requires `safety: "force"` so the runner cannot pause for prompts.
+
+### Stage definitions
+
+Each stage entry resolves to a `ResolvedStage` with these fields:
+
+| Field | Description |
+| --- | --- |
+| `id` | Unique identifier printed in reports and used by `quality run --stage <id>`. |
+| `type` | Adapter type (`biome`, `imports`, `command`, etc.). |
+| `preset` | Optional preset name defined under `stages.<type>.presets`. Presets may `extends` one or many other presets. |
+| `overrides` | Free-form options merged on top of the preset. |
+| `label` / `description` | Friendly metadata for reporters. |
+| `mode` | Overrides the pipeline mode (`check`, `fix`, or `report`). |
+| `files` | Glob array evaluated when the CLI is invoked without `--files`. |
+| `group` | String (group id) or object (`{ id, label?, parallel?, failFast?, continueOnError? }`). Stages sharing the same group id execute concurrently when `parallel` is true. |
+| `continueOnError` | When `true`, the pipeline continues even if the stage fails. Defaults to `false`, but can be inherited from presets or groups. Command stages also infer this from `options.abortPipelineOnFailure`. |
+| `if` | JavaScript expression evaluated with `process.env` to determine whether the stage runs. |
+| `reporters` | Overrides the profile-level reporters for this stage. |
+
+### Groups & parallel execution
+
+- Stages within the same group id run concurrently when `parallel: true`.
+- `failFast: true` (default) aborts sibling stages at the first failure via `AbortController`.
+- `continueOnError: true` on the stage or group allows the pipeline to keep running after failures.
+- The runner aggregates output in a deterministic order regardless of parallel execution.
+
+### Command adapter options
+
+`command` stages accept:
+
+| Option | Description |
+| --- | --- |
+| `commands` | Array of either shell strings or objects `{ command, args?, cwd?, env?, shell?, timeoutMs?, continueOnError?, label? }`. Arrays in `command` allow specifying the binary plus default args. |
+| `cwd` | Working directory for commands (default: repo root). |
+| `env` | Additional environment variables. |
+| `shell` | Whether to execute through the shell (`true`, `false`, or shell binary). Shell strings default to `shell: true`. |
+| `timeoutMs` | Per-command timeout. |
+| `abortPipelineOnFailure` | When `false`, the stage inherits `continueOnError: true` so downstream stages continue. |
+| `output` | Optional object that enables quiet logging. Supports `preset` (`vitest`, `playwright`, `turbo`), `mode` (`passthrough` or `errors-only`), pattern overrides, and `showOnSuccess`/`showOnFailure` toggles. |
+
+The adapter collects stdout/stderr per command, respects pipeline abort signals, and reports timeouts with structured details.
+
+When `output` is configured the adapter streams stdout/stderr through the
+command-output filter and only emits the filtered lines (for example, failing
+Vitest assertions). Passing stages can suppress logs entirely by setting
+`showOnSuccess: "none"`, keeping `quality check` output tight even when the
+underlying command is noisy. Set `QUALITY_SHOW_ALL_OUTPUT=1` or pass
+`--show-command-output` to the CLI to bypass filtering for a given run.
+
+### Extending adapters
+
+Add custom adapters by exporting modules that return a `StageAdapter`:
+
+```ts
+// packages/tools/quality/custom-adapter.ts
+import type { StageAdapter } from "@codesynth-labs/quality/src/adapters/types";
+
+export const greetAdapter: StageAdapter<{ message?: string }> = {
+  type: "greet",
+  label: "Greeter",
+  description: "Prints a greeting",
+  async run(context) {
+    const message = context.options.message ?? "hello";
+    console.log(message);
+    return { status: "passed" };
+  },
+};
+
+export default { adapters: [greetAdapter] };
+```
+
+Reference the module path from `.qualityrc`:
+
+```jsonc
+{
+  "$schema": "./packages/tooling/quality/schemas/qualityrc.schema.json",
+  "adapters": ["./packages/tools/quality/custom-adapter.ts"],
+  "profiles": {
+    "local": {
+      "pipeline": [
+        { "id": "greet", "type": "greet", "overrides": { "message": "hi" } }
+      ]
+    }
+  }
+}
+```
+
+The loader resolves module paths relative to the config file, registers adapters, and exposes preset metadata to the CLI.
+
+### Schema & validation
+
+`packages/tooling/quality/schemas/qualityrc.schema.json` describes:
+
+- Root keys (`$schema`, `adapters`, `stages`, `profiles`, `reporters`, `hooks`).
+- Built-in adapter option definitions (biome/imports/bun-native/filenames/structure/no-root-barrel/command).
+- Group metadata, parallel semantics, and hook definitions.
+
+Unit tests use a vendored JSON Schema validator to ensure sample `.qualityrc` files remain compliant. Point editors at the relative schema path or host the schema at `$id` for global distribution.
+
+## CLI reference
+
+```
+Usage: quality <command> [options]
+
+Commands:
+  quality check [--profile <name>] [--files <glob>] [--stage <id>] [--reporter <name>] [--json <path>]
+  quality fix [--profile <name>] [--files <glob>] [--stage <id>]
+  quality run --stage <id> [--mode check|fix|report] [--files <glob>]
+  quality list [--adapters]
+  quality hooks install [--force]
+  quality hooks uninstall
+  quality hooks list
+  quality git-hook <name>
+  quality ci run <target> [--base-ref <ref>] [--head-ref <ref>]
+  quality ci list
+  quality ci emit <target> [--format github|gitlab|generic]
+  quality validate-config [--profile <name>] [--stage <id>]
+  quality init [--cwd <path>]
+```
+
+Highlights:
+
+- `quality list` prints the resolved pipeline. `quality list --adapters` shows registered adapters, supported modes, and preset descriptions.
+- `quality validate-config` outputs the merged profile JSON, or a specific stage via `--stage`.
+- `quality run --stage` executes a single stage ad-hoc (useful for command adapters or debugging).
+- `--reporter` can be repeated; `--json <path>` adds the JSON reporter automatically.
+- `quality hooks install` writes deterministic `.git/hooks/*` scripts that invoke `quality git-hook <name>`; use `quality hooks list` to audit managed scripts and `quality hooks uninstall` to clean them up.
+- `quality ci run <target>` executes the declarative CI target runner; `quality ci emit` prints starter YAML for GitHub/GitLab jobs, and `quality ci list` summarizes available targets.
+
+## Nested configs
+
+Place additional `.qualityrc` files within packages to customize presets or append stages for that subtree. The loader merges configs in this order:
+
+1. Repository root `.qualityrc`.
+2. Profile inheritance (`extends`).
+3. Nested `.qualityrc` files closest to the targeted files.
+4. Stage-level overrides.
+
+Adapters declared in nested configs are registered automatically.
+
+## Development
+
+- Type check: `bun --filter @codesynth-labs/quality typecheck`
+- Lint: `bun --filter @codesynth-labs/quality lint`
+- Unit tests: `bun --filter @codesynth-labs/quality test:unit`
+
+Tests live alongside the source (e.g., `src/pipeline/runner.unit.test.ts`). Fixtures under `test/fixtures/**` exercise loader behaviours, preset inheritance, and schema validation.
+
+Run `quality check` before publishing changes to ensure reporters, hooks, and adapters remain functional across the monorepo.

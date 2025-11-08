@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/qualityrc.schema.json",
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "lint:biome",
+          "type": "biome",
+          "files": ["src/**/*.ts", "packages/**/*.ts"]
+        }
+      ],
+      "reporters": ["summary"]
+    }
+  }
+}

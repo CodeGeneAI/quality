@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../../schemas/qualityrc.schema.json",
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "stub:override",
+          "type": "stub",
+          "label": "app override",
+          "overrides": { "shouldFail": true }
+        }
+      ]
+    }
+  }
+}

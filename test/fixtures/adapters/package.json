@@ -1,0 +1,7 @@
+{
+  "name": "quality-fixture-adapters",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules/.cache tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
+  }
+}
