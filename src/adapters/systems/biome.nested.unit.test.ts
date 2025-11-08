@@ -2,10 +2,10 @@ import { cp, rm } from "fs/promises";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { registerBuiltInAdapters } from "../../adapters/register-builtins";
-import { resetAdapters } from "../../adapters/registry";
 import { loadQualityConfig } from "../../config/loader";
 import { runPipeline } from "../../pipeline/runner";
+import { registerBuiltInAdapters } from "../register-builtins";
+import { resetAdapters } from "../registry";
 
 const originalCwd = process.cwd();
 const fixtureRoot = fileURLToPath(
