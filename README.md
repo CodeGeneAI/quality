@@ -9,7 +9,7 @@ Unified quality suite for the Forge Platform monorepo. The package ships the `qu
 - **Profiles** – Named pipelines that order stages, set reporters, and attach hooks. Profiles can extend one another, allowing “local” and “ci” variants with small diffs.
 - **Groups** – Stages can join a group to opt into parallel execution, fail-fast semantics, or shared metadata.
 - **Hooks & reporters** – Declarative shell commands that run on start/success/failure, and reporters (summary/json/junit/verbose) that consume pipeline results.
-- **Schema-first** – `packages/tooling/quality/schemas/qualityrc.schema.json` models the entire configuration surface so editors and CI can validate configs.
+- **Schema-first** – `packages/quality/schemas/qualityrc.schema.json` models the entire configuration surface so editors and CI can validate configs.
 
 ## Legacy configuration migration
 
@@ -26,12 +26,12 @@ CLI shims that previously forwarded `quality check --gate <name>` now dispatch v
 ## Getting started
 
 1. Ensure dependencies are installed: `bun install` at the repo root.
-2. Generate a starter configuration: `bun --bun packages/tooling/quality/src/cli/index.ts init` (or `bun run quality:init`). The template demonstrates presets, command stages, and grouped adapters.
+2. Generate a starter configuration: `bun --bun packages/quality/src/cli/index.ts init` (or `bun run quality:init`). The template demonstrates presets, command stages, and grouped adapters.
 3. Reference the schema inside `.qualityrc` files to enable editor IntelliSense:
 
 ```jsonc
 {
-  "$schema": "./packages/tooling/quality/schemas/qualityrc.schema.json",
+  "$schema": "./packages/quality/schemas/qualityrc.schema.json",
   "stages": {
     "command": {
       "presets": {
@@ -184,7 +184,7 @@ Reference the module path from `.qualityrc`:
 
 ```jsonc
 {
-  "$schema": "./packages/tooling/quality/schemas/qualityrc.schema.json",
+  "$schema": "./packages/quality/schemas/qualityrc.schema.json",
   "adapters": ["./packages/tools/quality/custom-adapter.ts"],
   "profiles": {
     "local": {
@@ -200,7 +200,7 @@ The loader resolves module paths relative to the config file, registers adapters
 
 ### Schema & validation
 
-`packages/tooling/quality/schemas/qualityrc.schema.json` describes:
+`packages/quality/schemas/qualityrc.schema.json` describes:
 
 - Root keys (`$schema`, `adapters`, `stages`, `profiles`, `reporters`, `hooks`).
 - Built-in adapter option definitions (biome/imports/bun-native/filenames/structure/no-root-barrel/command).

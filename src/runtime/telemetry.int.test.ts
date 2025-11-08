@@ -8,7 +8,7 @@ import { executeCiTarget } from "./ci-runner";
 import { executeGitHook } from "./git-hook-runner";
 
 const createTelemetryConfig = () => ({
-  $schema: "./packages/tooling/quality/schemas/qualityrc.schema.json",
+  $schema: "./packages/quality/schemas/qualityrc.schema.json",
   stages: {},
   profiles: {
     local: {

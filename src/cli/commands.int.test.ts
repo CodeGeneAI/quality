@@ -49,7 +49,7 @@ const createCommandContext = (): CommandResultContext => {
 };
 
 const baseConfig = {
-  $schema: "./packages/tooling/quality/schemas/qualityrc.schema.json",
+  $schema: "./packages/quality/schemas/qualityrc.schema.json",
   stages: {},
   profiles: {
     local: {

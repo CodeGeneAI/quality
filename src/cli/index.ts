@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { Cli } from "clipanion";
+import packageJson from "../../package.json" with { type: "json" };
 import {
   QualityCiEmitCommand,
   QualityCiListCommand,
@@ -15,10 +16,12 @@ import {
   QualityValidateCommand,
 } from "./commands";
 
+const { version: packageVersion } = packageJson;
+
 const cli = new Cli({
   binaryLabel: "Forge Quality Suite",
   binaryName: "quality",
-  binaryVersion: "0.0.1",
+  binaryVersion: packageVersion,
 });
 
 cli.register(QualityRunCommand);

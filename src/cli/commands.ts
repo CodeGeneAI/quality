@@ -655,7 +655,7 @@ export class QualityInitCommand extends Command {
     }
     const template = JSON.stringify(
       {
-        $schema: "./packages/tooling/quality/schemas/qualityrc.schema.json",
+        $schema: "./packages/quality/schemas/qualityrc.schema.json",
         stages: {
           biome: {
             presets: {
