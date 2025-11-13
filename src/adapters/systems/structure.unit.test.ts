@@ -91,7 +91,9 @@ describe("structureAdapter", () => {
   });
 
   it("passes when every matched directory satisfies the requirement", async () => {
-    const root = await mkdtemp(join(tmpdir(), "quality-structure-per-match-pass-"));
+    const root = await mkdtemp(
+      join(tmpdir(), "quality-structure-per-match-pass-"),
+    );
     try {
       await mkdir(join(root, "packages/pkg-a"), { recursive: true });
       await mkdir(join(root, "packages/pkg-b"), { recursive: true });

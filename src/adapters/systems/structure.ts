@@ -34,8 +34,12 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
     const failures: string[] = [];
     await Promise.all(
       rules.map(async (rule) => {
-        const perMatchTargets = await resolvePerMatchTargets(rule, context.root);
-        const evaluatedTargets = perMatchTargets.size > 0 ? perMatchTargets : new Set(["."]);
+        const perMatchTargets = await resolvePerMatchTargets(
+          rule,
+          context.root,
+        );
+        const evaluatedTargets =
+          perMatchTargets.size > 0 ? perMatchTargets : new Set(["."]);
 
         await Promise.all(
           Array.from(evaluatedTargets).map(async (relativeRoot) => {
@@ -44,7 +48,8 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
               dot: true,
               ignore: DEFAULT_GLOB_IGNORE,
             });
-            const displayRoot = relativeRoot === "." ? "workspace root" : relativeRoot;
+            const displayRoot =
+              relativeRoot === "." ? "workspace root" : relativeRoot;
 
             if (rule.type === "require" && matches.length === 0) {
               failures.push(
