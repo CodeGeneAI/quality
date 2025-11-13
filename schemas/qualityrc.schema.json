@@ -393,6 +393,7 @@
           "items": { "type": "string" }
         },
         "group": { "$ref": "#/definitions/stageGroup" },
+        "output": { "$ref": "#/definitions/stageOutputOptions" },
         "continueOnError": { "type": "boolean" },
         "if": { "type": "string" },
         "reporters": {
@@ -510,6 +511,7 @@
           "items": { "type": "string" }
         },
         "group": { "$ref": "#/definitions/stageGroup" },
+        "output": { "$ref": "#/definitions/stageOutputOptions" },
         "continueOnError": { "type": "boolean" },
         "if": { "type": "string" },
         "reporters": {
@@ -778,6 +780,34 @@
       },
       "additionalProperties": false
     },
+    "stageOutputOptions": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "enum": ["vitest", "playwright", "turbo"]
+        },
+        "mode": { "type": "string", "enum": ["passthrough", "errors-only"] },
+        "include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "trimLines": { "type": "boolean" },
+        "showOnSuccess": {
+          "type": "string",
+          "enum": ["none", "filtered", "raw"]
+        },
+        "showOnFailure": {
+          "type": "string",
+          "enum": ["filtered", "raw"]
+        }
+      },
+      "additionalProperties": false
+    },
     "adapterOptionsStructure": {
       "type": "object",
       "properties": {
@@ -787,7 +817,28 @@
             "type": "object",
             "properties": {
               "type": { "type": "string", "enum": ["require", "disallow"] },
-              "glob": { "type": "string" },
+              "glob": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "perMatchGlob": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "perMatchKind": {
+                "type": "string",
+                "enum": ["directory", "file"]
+              },
               "message": { "type": "string" }
             },
             "required": ["type", "glob"],
@@ -872,7 +923,8 @@
           "oneOf": [{ "type": "boolean" }, { "type": "string" }]
         },
         "timeoutMs": { "type": "number", "minimum": 0 },
-        "abortPipelineOnFailure": { "type": "boolean" }
+        "abortPipelineOnFailure": { "type": "boolean" },
+        "output": { "$ref": "#/definitions/stageOutputOptions" }
       },
       "additionalProperties": false
     }

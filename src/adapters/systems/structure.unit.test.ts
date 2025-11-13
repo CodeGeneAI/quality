@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
@@ -57,6 +57,61 @@ describe("structureAdapter", () => {
 
       expect(result.status).toBe("failed");
       expect(result.messages?.[0]).toContain("*.txt");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("requires files per matched directory", async () => {
+    const root = await mkdtemp(join(tmpdir(), "quality-structure-per-match-"));
+    try {
+      await mkdir(join(root, "packages/pkg-a"), { recursive: true });
+      await mkdir(join(root, "packages/pkg-b"), { recursive: true });
+      await writeFile(join(root, "packages/pkg-a/package.json"), "{}");
+      await writeFile(join(root, "packages/pkg-b/package.json"), "{}");
+      await writeFile(join(root, "packages/pkg-a/README.md"), "# pkg-a\n");
+
+      const result = await runAdapter(root, {
+        rules: [
+          {
+            type: "require",
+            glob: "README.md",
+            perMatchGlob: "packages/**/package.json",
+            perMatchKind: "file",
+            message: "Missing README.md",
+          },
+        ],
+      });
+
+      expect(result.status).toBe("failed");
+      expect(result.messages?.[0]).toContain("pkg-b");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("passes when every matched directory satisfies the requirement", async () => {
+    const root = await mkdtemp(join(tmpdir(), "quality-structure-per-match-pass-"));
+    try {
+      await mkdir(join(root, "packages/pkg-a"), { recursive: true });
+      await mkdir(join(root, "packages/pkg-b"), { recursive: true });
+      await writeFile(join(root, "packages/pkg-a/package.json"), "{}");
+      await writeFile(join(root, "packages/pkg-b/package.json"), "{}");
+      await writeFile(join(root, "packages/pkg-a/README.md"), "# pkg-a\n");
+      await writeFile(join(root, "packages/pkg-b/README.md"), "# pkg-b\n");
+
+      const result = await runAdapter(root, {
+        rules: [
+          {
+            type: "require",
+            glob: "README.md",
+            perMatchGlob: "packages/**/package.json",
+            perMatchKind: "file",
+          },
+        ],
+      });
+
+      expect(result.status).toBe("passed");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
