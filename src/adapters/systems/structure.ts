@@ -41,9 +41,10 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
         const evaluatedTargets =
           perMatchTargets.size > 0 ? perMatchTargets : new Set(["."]);
 
+        const globInput = normalizeGlob(rule.glob);
         await Promise.all(
           Array.from(evaluatedTargets).map(async (relativeRoot) => {
-            const matches = await fg(rule.glob, {
+            const matches = await fg(globInput, {
               cwd: path.join(context.root, relativeRoot),
               dot: true,
               ignore: DEFAULT_GLOB_IGNORE,
@@ -98,7 +99,7 @@ const resolvePerMatchTargets = async (
   }
 
   const perMatchKind = rule.perMatchKind ?? "directory";
-  const perMatches = await fg(rule.perMatchGlob, {
+  const perMatches = await fg(normalizeGlob(rule.perMatchGlob), {
     cwd: root,
     dot: true,
     ignore: DEFAULT_GLOB_IGNORE,
@@ -111,4 +112,13 @@ const resolvePerMatchTargets = async (
     targets.add(relative === "" ? "." : relative);
   }
   return targets;
+};
+
+const normalizeGlob = (
+  pattern: string | readonly string[],
+): string | string[] => {
+  if (typeof pattern === "string") {
+    return pattern;
+  }
+  return [...pattern];
 };
