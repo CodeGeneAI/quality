@@ -4,6 +4,7 @@ export const DEFAULT_GLOB_IGNORE = [
   "**/node_modules/**",
   "**/.bun/**",
   "**/.turbo/**",
+  "**/.dev/**",
   "**/dist/**",
   "**/coverage/**",
   "**/.cache/**",
