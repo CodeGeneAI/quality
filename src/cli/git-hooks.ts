@@ -34,12 +34,39 @@ export interface ManagedHookInfo {
   readonly status?: ManagedHookStatus;
 }
 
-const HOOKS_DIR = ".git/hooks";
+const GIT_DIR = ".git";
+
+const resolveHooksDir = async (root: string): Promise<string> => {
+  const gitPath = join(root, GIT_DIR);
+  let gitStats: Awaited<ReturnType<typeof stat>> | null = null;
+  try {
+    gitStats = await stat(gitPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(`Unable to locate git directory at ${gitPath}`);
+    }
+    throw error;
+  }
+
+  if (gitStats?.isDirectory()) {
+    return join(gitPath, "hooks");
+  }
+
+  // Worktree .git files store a pointer to the real git dir.
+  const descriptor = await readFile(gitPath, "utf8");
+  const match = /^gitdir:\s*(.+)$/im.exec(descriptor);
+  if (!match) {
+    throw new Error(`Unable to resolve gitdir from ${gitPath}`);
+  }
+  const gitDir = match[1].trim();
+  const resolvedGitDir = gitDir.startsWith("/") ? gitDir : join(root, gitDir);
+  return join(resolvedGitDir, "hooks");
+};
 
 export const installHooks = async (
   options: InstallHooksOptions,
 ): Promise<ManagedHookInfo[]> => {
-  const hooksDir = join(options.root, HOOKS_DIR);
+  const hooksDir = await resolveHooksDir(options.root);
   await mkdir(hooksDir, { recursive: true });
 
   const results: ManagedHookInfo[] = [];
@@ -63,7 +90,7 @@ export const installHooks = async (
 export const uninstallHooks = async (
   options: UninstallHooksOptions,
 ): Promise<ManagedHookInfo[]> => {
-  const hooksDir = join(options.root, HOOKS_DIR);
+  const hooksDir = await resolveHooksDir(options.root);
   const results: ManagedHookInfo[] = [];
   for (const hookName of options.hooks) {
     const hookPath = join(hooksDir, hookName);
@@ -79,7 +106,7 @@ export const uninstallHooks = async (
 export const listHooks = async (
   options: ListHooksOptions,
 ): Promise<ManagedHookInfo[]> => {
-  const hooksDir = join(options.root, HOOKS_DIR);
+  const hooksDir = await resolveHooksDir(options.root);
   const results: ManagedHookInfo[] = [];
   for (const hookName of options.hooks) {
     const hookPath = join(hooksDir, hookName);
