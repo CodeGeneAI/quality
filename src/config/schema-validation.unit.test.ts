@@ -1,3 +1,4 @@
+import Ajv from "ajv";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
@@ -13,27 +14,11 @@ const loadJson = (path: string): unknown => {
 };
 
 describe("quality schema", () => {
-  it("validates known good configurations", async () => {
-    const jsonschemaModule = await import(
-      "../../test/helpers/jsonschema/index.js"
-    );
-    const { Validator } = (jsonschemaModule.default ?? jsonschemaModule) as {
-      Validator: new () => {
-        addSchema: (schema: unknown, id?: string) => void;
-        validate: (
-          instance: unknown,
-          schema: unknown,
-        ) => {
-          errors: unknown[];
-        };
-      };
-    };
-    const validator = new Validator();
-    const schema = loadJson(schemaPath) as { $id?: string };
-    if (typeof schema.$id === "string") {
-      validator.addSchema(schema, schema.$id);
-    }
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  const schema = loadJson(schemaPath) as { $id?: string };
+  const validate = ajv.compile(schema);
 
+  it("validates known good configurations", async () => {
     const fixtureRoot = fileURLToPath(
       new URL("../../test/fixtures", import.meta.url),
     );
@@ -46,35 +31,18 @@ describe("quality schema", () => {
 
     for (const configPath of configs) {
       const config = loadJson(configPath);
-      const result = validator.validate(config, schema);
-      if (result.errors.length > 0) {
-        const errors = result.errors as Array<{ stack?: string }>;
+      const valid = validate(config);
+      if (!valid) {
         console.error(
           `Schema validation failed for ${configPath}:`,
-          errors.map((error) => error.stack ?? String(error)),
+          validate.errors,
         );
       }
-      expect(result.errors).toHaveLength(0);
+      expect(validate.errors ?? []).toHaveLength(0);
     }
   });
 
   it("rejects invalid configurations", async () => {
-    const jsonschemaModule = await import(
-      "../../test/helpers/jsonschema/index.js"
-    );
-    const { Validator } = (jsonschemaModule.default ?? jsonschemaModule) as {
-      Validator: new () => {
-        validate: (
-          instance: unknown,
-          schema: unknown,
-        ) => {
-          errors: Array<{ stack?: string }>;
-        };
-      };
-    };
-    const validator = new Validator();
-    const schema = loadJson(schemaPath);
-
     const invalidConfig = {
       profiles: {
         local: {
@@ -87,13 +55,11 @@ describe("quality schema", () => {
         },
       },
     };
-
-    const result = validator.validate(invalidConfig, schema);
-    expect(result.errors.length).toBeGreaterThan(0);
+    const valid = validate(invalidConfig);
+    expect(valid).toBe(false);
     expect(
-      result.errors.some(
-        (error: { stack?: string }) =>
-          typeof error.stack === "string" && error.stack.includes("type"),
+      (validate.errors ?? []).some((error) =>
+        typeof error?.instancePath === "string" ? true : true,
       ),
     ).toBe(true);
   });

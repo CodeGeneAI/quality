@@ -96,7 +96,7 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
 }
 ```
 
-- `quality hooks install` materialises hook scripts under `.git/hooks/*` (only when `manage` is true). Scripts are idempotent, include a marker header, and call back into `quality git-hook <name>`.
+- `quality hooks install` now materialises a **versioned** `.quality/` folder plus tiny shims in `.git/hooks/*` (only when `manage` is true). Shims delegate to `.quality/<hook>` which sources `./_/quality.sh` and invokes `quality git-hook <name>`. Hooks are replaced on every install; add `"prepare": "quality hooks install"` so fresh clones stay in sync.
 - `quality git-hook <name>` runs the configured stages in hook context, respecting auto-fix policies and safeguards inherited from Phase 1.
 
 ### Stage definitions
@@ -221,7 +221,7 @@ Highlights:
 - `quality validate-config` outputs the merged profile JSON, or a specific stage via `--stage`.
 - `quality run --stage` executes a single stage ad-hoc (useful for command adapters or debugging).
 - `--reporter` can be repeated; `--json <path>` adds the JSON reporter automatically.
-- `quality hooks install` writes deterministic `.git/hooks/*` scripts that invoke `quality git-hook <name>`; use `quality hooks list` to audit managed scripts and `quality hooks uninstall` to clean them up.
+- `quality hooks install` writes deterministic **.git/hooks shims** that invoke `.quality/<hook>`; use `quality hooks list` to audit managed shims and `quality hooks uninstall` to clean them up. The `.quality/` folder (including `_/quality.sh` and hook files) should be committed.
 
 ## Nested configs
 

@@ -31,6 +31,8 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
       return { status: "passed" };
     }
 
+    const globCache = new Map<string, string | string[]>();
+
     const failures: string[] = [];
     await Promise.all(
       rules.map(async (rule) => {
@@ -41,7 +43,7 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
         const evaluatedTargets =
           perMatchTargets.size > 0 ? perMatchTargets : new Set(["."]);
 
-        const globInput = normalizeGlob(rule.glob);
+        const globInput = normalizeGlobCached(globCache, rule.glob);
         await Promise.all(
           Array.from(evaluatedTargets).map(async (relativeRoot) => {
             const matches = await fg(globInput, {
@@ -99,12 +101,15 @@ const resolvePerMatchTargets = async (
   }
 
   const perMatchKind = rule.perMatchKind ?? "directory";
-  const perMatches = await fg(normalizeGlob(rule.perMatchGlob), {
-    cwd: root,
-    dot: true,
-    ignore: DEFAULT_GLOB_IGNORE,
-    onlyDirectories: perMatchKind === "directory",
-  });
+  const perMatches = await fg(
+    normalizeGlobCached(new Map(), rule.perMatchGlob),
+    {
+      cwd: root,
+      dot: true,
+      ignore: DEFAULT_GLOB_IGNORE,
+      onlyDirectories: perMatchKind === "directory",
+    },
+  );
 
   const targets = new Set<string>();
   for (const match of perMatches) {
@@ -114,11 +119,14 @@ const resolvePerMatchTargets = async (
   return targets;
 };
 
-const normalizeGlob = (
+const normalizeGlobCached = (
+  cache: Map<string, string | string[]>,
   pattern: string | readonly string[],
 ): string | string[] => {
-  if (typeof pattern === "string") {
-    return pattern;
-  }
-  return [...pattern];
+  const key = Array.isArray(pattern) ? pattern.join("|") : String(pattern);
+  const cached = cache.get(key);
+  if (cached) return cached;
+  const normalized = typeof pattern === "string" ? pattern : [...pattern];
+  cache.set(key, normalized);
+  return normalized;
 };

@@ -102,12 +102,18 @@ export const commandAdapter: StageAdapter<CommandAdapterOptions> = {
         abortSignal: context.abortSignal,
         shell: entry.shell ?? options.shell,
         timeoutMs: entry.timeoutMs ?? options.timeoutMs,
-        onStdoutChunk: outputContext
-          ? (chunk) => outputContext.filter.addChunk("stdout", chunk)
-          : undefined,
-        onStderrChunk: outputContext
-          ? (chunk) => outputContext.filter.addChunk("stderr", chunk)
-          : undefined,
+        onStdoutChunk:
+          outputContext &&
+          (outputContext.showOnSuccess !== "none" ||
+            outputContext.showOnFailure)
+            ? (chunk) => outputContext.filter.addChunk("stdout", chunk)
+            : undefined,
+        onStderrChunk:
+          outputContext &&
+          (outputContext.showOnSuccess !== "none" ||
+            outputContext.showOnFailure)
+            ? (chunk) => outputContext.filter.addChunk("stderr", chunk)
+            : undefined,
       });
 
       outputContext?.filter.finalize();

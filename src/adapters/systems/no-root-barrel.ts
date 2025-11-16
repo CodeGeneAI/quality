@@ -40,6 +40,8 @@ export const noRootBarrelAdapter: StageAdapter<NoRootBarrelAdapterOptions> = {
       return { status: "passed" };
     }
 
+    const matcherCache = new Map<string, (value: string) => boolean>();
+
     const exceptions = options.exceptions ?? [];
     const forbiddenFiles = options.forbiddenFiles ?? DEFAULT_FORBIDDEN_FILES;
 
@@ -55,7 +57,7 @@ export const noRootBarrelAdapter: StageAdapter<NoRootBarrelAdapterOptions> = {
     for (const relativeDir of matchedPackages) {
       if (
         exceptions.length > 0 &&
-        micromatch.isMatch(relativeDir, exceptions)
+        isMatchCached(relativeDir, exceptions, matcherCache)
       ) {
         continue;
       }
@@ -121,6 +123,23 @@ const collectPackageExportViolations = (
   }
 
   return messages;
+};
+
+const isMatchCached = (
+  value: string,
+  patterns: readonly string[],
+  cache: Map<string, (value: string) => boolean>,
+): boolean => {
+  const key = Array.isArray(patterns) ? patterns.join("|") : String(patterns);
+  let matcher = cache.get(key);
+  if (!matcher) {
+    const normalized = Array.isArray(patterns) ? [...patterns] : [patterns];
+    matcher = micromatch.matcher(
+      normalized.length === 1 ? normalized[0] : normalized,
+    );
+    cache.set(key, matcher);
+  }
+  return matcher(value);
 };
 
 const isRootIndexExport = (value: unknown): boolean => {

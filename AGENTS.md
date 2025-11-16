@@ -22,7 +22,7 @@ Deliver a single declarative quality pipeline for the monorepo: one CLI, composa
 - `quality list --adapters` prints registered adapters with preset metadata.
 - `quality validate-config` shows the merged profile/stage definition.
 - `quality init` scaffolds a config with presets, groups, and command examples.
-- `quality hooks install|list|uninstall` manage `.git/hooks/*` scripts (idempotent; `--force` overrides unmanaged scripts). `quality hooks install` skips instantly when the managed scripts already match; the workspace `prepare` script runs it so hooks stay current after installs.
+- `quality hooks install|list|uninstall` manage shims in `.git/hooks/*` that delegate to the versioned `.quality/` folder. Installs always replace existing scripts; include `"prepare": "quality hooks install"` so fresh clones regenerate hooks. The `.quality/` folder (and `_/quality.sh`) is meant to be committed.
 - `quality git-hook <name>` executes the managed hook pipeline (used by installed scripts and for manual debugging).
 - CI-target commands were removed; focus on core run/list/git-hook flows.
 - Telemetry toggles: `--telemetry stdout|file`, `--telemetry-file <path>`, and `--debug` populate `QUALITY_TELEMETRY*` env vars for JSON diagnostics.

@@ -34,7 +34,12 @@ export interface ManagedHookInfo {
 
 const GIT_DIR = ".git";
 
+const hooksDirCache = new Map<string, string>();
+
 const resolveHooksDir = async (root: string): Promise<string> => {
+  if (hooksDirCache.has(root)) {
+    return hooksDirCache.get(root)!;
+  }
   const gitPath = join(root, GIT_DIR);
   let gitStats: Awaited<ReturnType<typeof stat>> | null = null;
   try {
@@ -47,7 +52,9 @@ const resolveHooksDir = async (root: string): Promise<string> => {
   }
 
   if (gitStats?.isDirectory()) {
-    return join(gitPath, "hooks");
+    const dir = join(gitPath, "hooks");
+    hooksDirCache.set(root, dir);
+    return dir;
   }
 
   // Worktree .git files store a pointer to the real git dir.
@@ -58,7 +65,9 @@ const resolveHooksDir = async (root: string): Promise<string> => {
   }
   const gitDir = match[1].trim();
   const resolvedGitDir = gitDir.startsWith("/") ? gitDir : join(root, gitDir);
-  return join(resolvedGitDir, "hooks");
+  const dir = join(resolvedGitDir, "hooks");
+  hooksDirCache.set(root, dir);
+  return dir;
 };
 
 export const installHooks = async (
@@ -117,8 +126,7 @@ const ensureQualityStructure = async (root: string): Promise<void> => {
   const qualityDir = join(root, QUALITY_DIR);
   const helperPath = join(root, QUALITY_HELPER);
   await mkdir(join(qualityDir, "_"), { recursive: true });
-  await writeFile(helperPath, buildHelperScript(root), { mode: 0o755 });
-  await chmod(helperPath, 0o755);
+  await writeIfChanged(helperPath, buildHelperScript(root));
 };
 
 const writeQualityHookScript = async ({
@@ -143,8 +151,7 @@ const writeShimScript = async ({
 }): Promise<void> => {
   await mkdir(dirname(shimPath), { recursive: true });
   const script = buildShimScript({ hookName });
-  await writeFile(shimPath, script, { mode: 0o755 });
-  await chmod(shimPath, 0o755);
+  await writeIfChanged(shimPath, script, SHIM_MARKER);
 };
 
 const buildQualityHookScript = (hookName: string): string => {
@@ -205,13 +212,32 @@ const buildHelperScript = (_root: string): string => {
     'QUALITY_BIN="$(find_quality || true)"',
     'if [ -z "$QUALITY_BIN" ]; then',
     '  echo "[quality] Unable to locate the quality executable." >&2',
-    '  exit 1',
+    "  exit 1",
     "fi",
     "",
     'exec "$QUALITY_BIN" git-hook "$HOOK_NAME" "$@"',
     "",
   ];
   return lines.join("\n");
+};
+
+const writeIfChanged = async (
+  target: string,
+  content: string,
+  marker?: string,
+): Promise<void> => {
+  const exists = await fileExists(target);
+  if (exists) {
+    const current = await readFile(target, "utf8").catch(() => "");
+    if (current === content) {
+      return;
+    }
+    if (marker && current.includes(marker)) {
+      // replace managed content silently
+    }
+  }
+  await writeFile(target, content, { mode: 0o755 });
+  await chmod(target, 0o755);
 };
 
 const isManagedHook = async (hookPath: string): Promise<boolean> => {

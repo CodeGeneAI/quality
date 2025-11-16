@@ -4,7 +4,7 @@ const registry = new Map<string, StageAdapter>();
 
 export const registerAdapter = (adapter: StageAdapter): void => {
   if (registry.has(adapter.type)) {
-    throw new Error(`Stage adapter '${adapter.type}' is already registered.`);
+    return;
   }
   registry.set(adapter.type, adapter);
 };

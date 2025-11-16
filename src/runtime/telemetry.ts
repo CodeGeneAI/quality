@@ -66,7 +66,7 @@ export const publishTelemetry = async (
     if (mode === "file") {
       const target = resolveTelemetryFile(options.root);
       await ensureParentDir(target);
-      await appendFile(target, `${JSON.stringify(payload)}\n`, "utf8");
+      await enqueueFileTelemetry(target, JSON.stringify(payload));
       return;
     }
   } catch (error) {
@@ -87,4 +87,25 @@ const resolveTelemetryFile = (root: string): string => {
 
 const ensureParentDir = async (path: string): Promise<void> => {
   await ensureDir(dirname(path));
+};
+
+let pendingFileEntries: string[] = [];
+let pendingWrite: Promise<void> | null = null;
+
+const enqueueFileTelemetry = async (
+  target: string,
+  payload: string,
+): Promise<void> => {
+  pendingFileEntries.push(payload);
+  if (pendingWrite) {
+    return pendingWrite;
+  }
+  pendingWrite = (async () => {
+    const entries = pendingFileEntries;
+    pendingFileEntries = [];
+    await appendFile(target, entries.join("\n") + "\n", "utf8");
+  })().finally(() => {
+    pendingWrite = null;
+  });
+  return pendingWrite;
 };

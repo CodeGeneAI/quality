@@ -22,13 +22,14 @@ export const selectStagesForContext = (
   const requested = normalizeRequested(options.requestedStageIds);
   const changedFiles = options.context.changedFiles ?? [];
   const filterByChange = Boolean(options.context.onlyChangedStageGroups);
+  const matcherCache = new Map<string, (files: readonly string[]) => boolean>();
 
   return options.stages.filter((stage) => {
     if (requested && !requested.has(stage.id)) {
       return false;
     }
     if (filterByChange && stage.group && changedFiles.length > 0) {
-      return matchesChangedFiles(stage, changedFiles);
+      return matchesChangedFiles(stage, changedFiles, matcherCache);
     }
     return true;
   });
@@ -46,6 +47,7 @@ const normalizeRequested = (
 const matchesChangedFiles = (
   stage: ResolvedStage,
   changedFiles: readonly string[],
+  cache: Map<string, (files: readonly string[]) => boolean>,
 ): boolean => {
   if (changedFiles.length === 0) {
     return false;
@@ -57,5 +59,14 @@ const matchesChangedFiles = (
   if (patterns.length === 0) {
     return true;
   }
-  return micromatch.some(changedFiles, patterns);
+  const cacheKey = `${stage.id}|${patterns.join(",")}`;
+  const matcher =
+    cache.get(cacheKey) ??
+    (() => {
+      const compiled = (files: readonly string[]) =>
+        micromatch.some(files, patterns);
+      cache.set(cacheKey, compiled);
+      return compiled;
+    })();
+  return matcher(changedFiles);
 };
