@@ -435,19 +435,13 @@ export class QualityHooksInstallCommand extends QualityBaseCommand {
         case "installed":
           this.context.stdout.write(`Installed hook '${result.name}'.\n`);
           break;
-        case "updated":
-          this.context.stdout.write(`Updated hook '${result.name}'.\n`);
-          break;
         case "replaced":
           this.context.stdout.write(
             `Replaced existing hook '${result.name}'.\n`,
           );
           break;
-        case "unchanged":
         default:
-          this.context.stdout.write(
-            `Hook '${result.name}' already installed; skipping.\n`,
-          );
+          this.context.stdout.write(`Installed hook '${result.name}'.\n`);
           break;
       }
     }
