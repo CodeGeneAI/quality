@@ -23,7 +23,13 @@
         "bun-native": { "$ref": "#/definitions/adapterPresetCatalogBunNative" },
         "filenames": { "$ref": "#/definitions/adapterPresetCatalogFilenames" },
         "structure": { "$ref": "#/definitions/adapterPresetCatalogStructure" },
-        "command": { "$ref": "#/definitions/adapterPresetCatalogCommand" }
+        "command": { "$ref": "#/definitions/adapterPresetCatalogCommand" },
+        "package-scripts": {
+          "$ref": "#/definitions/adapterPresetCatalogPackageScripts"
+        },
+        "package-catalog": {
+          "$ref": "#/definitions/adapterPresetCatalogPackageCatalog"
+        }
       },
       "additionalProperties": {
         "$ref": "#/definitions/adapterPresetCatalogGeneric"
@@ -386,6 +392,28 @@
         }
       ]
     },
+    "stagePresetPackageScripts": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsPackageScripts" }
+          }
+        }
+      ]
+    },
+    "stagePresetPackageCatalog": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsPackageCatalog" }
+          }
+        }
+      ]
+    },
     "stageBase": {
       "type": "object",
       "required": ["id", "type"],
@@ -484,6 +512,30 @@
                   "overrides": { "$ref": "#/definitions/adapterOptionsCommand" }
                 }
               }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "package-scripts" } }
+              },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsPackageScripts"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "package-catalog" } }
+              },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsPackageCatalog"
+                  }
+                }
+              }
             }
           ]
         }
@@ -561,6 +613,30 @@
         "presets": {
           "type": "object",
           "additionalProperties": { "$ref": "#/definitions/stagePresetCommand" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogPackageScripts": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetPackageScripts"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogPackageCatalog": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetPackageCatalog"
+          }
         }
       },
       "additionalProperties": false
@@ -781,6 +857,50 @@
         "timeoutMs": { "type": "number", "minimum": 0 },
         "abortPipelineOnFailure": { "type": "boolean" },
         "output": { "$ref": "#/definitions/stageOutputOptions" }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsPackageScripts": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "requiredScripts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsPackageCatalog": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["dependencies", "devDependencies", "peerDependencies"]
+          }
+        },
+        "allowlist": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rootCatalogPath": { "type": "string" }
       },
       "additionalProperties": false
     }

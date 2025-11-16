@@ -77,6 +77,55 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
 
 ## Configuration reference
 
+### Built-in adapters
+
+- biome — Biome lint/format.
+- imports — strip file extensions per allowlist.
+- bun-native — guard `node:` imports.
+- filenames — enforce test/fixture naming.
+- structure — require presence/absence of files.
+- command — run arbitrary commands.
+- template-check — validate template manifests.
+- metadata-verify — validate metadata files.
+- package-scripts — enforce required scripts in `package.json` files.
+- package-catalog — enforce dependency versions use `catalog:<name>` (or `workspace:`) with optional fix-mode rewrite using the root catalogs map.
+
+### package-catalog
+
+Ensures dependency versions in targeted `package.json` files use the monorepo catalogs.
+
+Options:
+
+- `packages` (string[]): glob(s) to `package.json` files (ignored: `**/node_modules/**`).
+- `sections` (string[]): which dependency blocks to scan; defaults to `dependencies`, `devDependencies`, `peerDependencies`.
+- `allowlist` (string[]): package names (globs) to exempt.
+- `rootCatalogPath` (string): path to the root package file containing `catalogs` (default: `package.json`).
+
+Behaviour:
+
+- **check**: fails if any targeted dependency lacks `catalog:<name>` or `workspace:*`. When a catalog entry exists, the message points to the expected `catalog:<name>`; otherwise it asks to add the dep to root catalogs or the allowlist.
+- **fix**: rewrites eligible deps to `catalog:<name>` when a root catalog entry exists. Deps without catalog entries still fail with guidance.
+
+Example stage:
+
+```jsonc
+{
+  "id": "package-catalog",
+  "type": "package-catalog",
+  "overrides": {
+    "packages": [
+      "packages/*/package.json",
+      "packages/*/*/package.json",
+      "packages/*/*/*/package.json",
+      "services/*/package.json",
+      "apps/*/package.json",
+      "!packages/forge-templates/templates/**/package.json"
+    ],
+    "allowlist": ["@codesynth-labs/*"]
+  }
+}
+```
+
 ### Git hooks
 
 `.qualityrc` can manage Git hook automation:
