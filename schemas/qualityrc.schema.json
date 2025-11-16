@@ -23,9 +23,6 @@
         "bun-native": { "$ref": "#/definitions/adapterPresetCatalogBunNative" },
         "filenames": { "$ref": "#/definitions/adapterPresetCatalogFilenames" },
         "structure": { "$ref": "#/definitions/adapterPresetCatalogStructure" },
-        "no-root-barrel": {
-          "$ref": "#/definitions/adapterPresetCatalogNoRootBarrel"
-        },
         "command": { "$ref": "#/definitions/adapterPresetCatalogCommand" }
       },
       "additionalProperties": {
@@ -378,17 +375,6 @@
         }
       ]
     },
-    "stagePresetNoRootBarrel": {
-      "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
-        {
-          "type": "object",
-          "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsNoRootBarrel" }
-          }
-        }
-      ]
-    },
     "stagePresetCommand": {
       "allOf": [
         { "$ref": "#/definitions/stagePresetBase" },
@@ -492,16 +478,6 @@
               }
             },
             {
-              "if": { "properties": { "type": { "const": "no-root-barrel" } } },
-              "then": {
-                "properties": {
-                  "overrides": {
-                    "$ref": "#/definitions/adapterOptionsNoRootBarrel"
-                  }
-                }
-              }
-            },
-            {
               "if": { "properties": { "type": { "const": "command" } } },
               "then": {
                 "properties": {
@@ -574,18 +550,6 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/stagePresetStructure"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "adapterPresetCatalogNoRootBarrel": {
-      "type": "object",
-      "properties": {
-        "presets": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/stagePresetNoRootBarrel"
           }
         }
       },
@@ -757,26 +721,6 @@
             "additionalProperties": false
           }
         },
-        "severity": { "type": "string", "enum": ["error", "warn"] }
-      },
-      "additionalProperties": false
-    },
-    "adapterOptionsNoRootBarrel": {
-      "type": "object",
-      "properties": {
-        "packages": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "exceptions": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "forbiddenFiles": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "checkExports": { "type": "boolean" },
         "severity": { "type": "string", "enum": ["error", "warn"] }
       },
       "additionalProperties": false

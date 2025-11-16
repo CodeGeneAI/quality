@@ -5,7 +5,7 @@ Deliver a single declarative quality pipeline for the monorepo: one CLI, composa
 
 ## High-level architecture
 - **CLI (`src/cli/index.ts`)** – clipanion-powered interface exposing `check`, `fix`, `run`, `list`, `validate-config`, and `init`. Binaries under `bin/` wrap the CLI for backwards-compatible command names (imports, bun-native, filenames, quality-suite).
-- **Adapter registry (`src/adapters/`)** – registers built-in stage adapters (biome, imports, bun-native, filenames, structure, no-root-barrel, command) and loads custom adapters declared in `.qualityrc`.
+- **Adapter registry (`src/adapters/`)** – registers built-in stage adapters (biome, imports, bun-native, filenames, structure, command) and loads custom adapters declared in `.qualityrc`.
 - **Config loader (`src/config/loader.ts`)** – discovers `.qualityrc` files, merges profile inheritance + nested overrides, resolves presets, adapters, reporters, hooks, and stage groups. Schema lives at `schemas/qualityrc.schema.json`.
 - **Pipeline (`src/pipeline/runner.ts`)** – executes resolved stages, handles parallel groups + fail-fast semantics, honours `continueOnError`, and surfaces aggregated results to reporters.
 - **Reporters (`src/reporters/*`)** – summary, json, junit, verbose. Extend by adding a module and wiring it into `runReporters`.

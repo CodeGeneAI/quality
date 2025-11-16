@@ -4,7 +4,7 @@ Unified quality suite for the Forge Platform monorepo. The package ships the `qu
 
 ## Core concepts
 
-- **Stage adapters** – Modules that implement a single responsibility (Biome, import hygiene, filenames, structure, bun-native, no-root-barrel, command, etc.). Adapters expose metadata (label, description, supported modes) and an execution hook.
+- **Stage adapters** – Modules that implement a single responsibility (Biome, import hygiene, filenames, structure, bun-native, command, etc.). Adapters expose metadata (label, description, supported modes) and an execution hook.
 - **Presets** – Named option bundles defined per adapter under `stages.<adapter>.presets`. Presets can extend other presets (single or multiple inheritance) and configure defaults such as groups, modes, hooks, and adapter options.
 - **Profiles** – Named pipelines that order stages, set reporters, and attach hooks. Profiles can extend one another, allowing “local” and “ci” variants with small diffs.
 - **Groups** – Stages can join a group to opt into parallel execution, fail-fast semantics, or shared metadata.

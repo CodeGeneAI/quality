@@ -625,13 +625,7 @@ export class QualityInitCommand extends Command {
           },
           ci: {
             extends: "local",
-            pipeline: [
-              {
-                id: "ci:no-root-barrel",
-                type: "no-root-barrel",
-                overrides: { packages: ["packages/*"] },
-              },
-            ],
+            pipeline: [],
             reporters: ["summary", ["json", { path: "reports/quality.json" }]],
           },
         },
