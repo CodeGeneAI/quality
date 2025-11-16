@@ -2,9 +2,11 @@ import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { registerBuiltInAdapters } from "../adapters/register-builtins";
+import { resetAdapters } from "../adapters/registry";
 import { loadQualityConfig } from "../config/loader";
+import { runPipeline } from "../pipeline/runner";
 import { runGit } from "../utils/git";
-import { executeCiTarget } from "./ci-runner";
 import { executeGitHook } from "./git-hook-runner";
 
 const createTelemetryConfig = () => ({
@@ -48,19 +50,6 @@ const createTelemetryConfig = () => ({
           rerunAfterFix: false,
           preserveCommitMetadata: true,
         },
-      },
-    },
-  },
-  ciTargets: {
-    "github:pr": {
-      profile: "ci",
-      filesMode: "workspace",
-      stages: ["delay:command"],
-      autoFix: {
-        enabled: false,
-        safety: "force",
-        rerunAfterFix: true,
-        preserveCommitMetadata: true,
       },
     },
   },
@@ -112,14 +101,14 @@ const loadConfigForRepo = async (root: string) => {
 describe("telemetry runtime integration", () => {
   const originalCwd = process.cwd();
   let suiteRoot: string;
-  let hookRepo: string;
-  let ciRepo: string;
+  let repo: string;
   let telemetryPath: string;
 
   beforeEach(async () => {
+    resetAdapters();
+    registerBuiltInAdapters();
     suiteRoot = await mkdtemp(join(tmpdir(), "quality-telemetry-suite-"));
-    hookRepo = await initialiseRepository(suiteRoot, "hook");
-    ciRepo = await initialiseRepository(suiteRoot, "ci");
+    repo = await initialiseRepository(suiteRoot, "hook");
     telemetryPath = join(suiteRoot, "quality-telemetry.log");
     await writeFile(
       telemetryPath,
@@ -131,6 +120,7 @@ describe("telemetry runtime integration", () => {
   });
 
   afterEach(async () => {
+    resetAdapters();
     delete process.env.QUALITY_TELEMETRY;
     delete process.env.QUALITY_TELEMETRY_FILE;
     process.chdir(originalCwd);
@@ -140,30 +130,28 @@ describe("telemetry runtime integration", () => {
   });
 
   it("appends telemetry entries when hook and CI run concurrently", async () => {
-    const hookConfig = await loadConfigForRepo(hookRepo);
-    const ciConfig = await loadConfigForRepo(ciRepo);
-
-    const hook = hookConfig.gitHooks["pre-commit"];
-    const target = ciConfig.ciTargets["github:pr"];
+    const config = await loadConfigForRepo(repo);
+    const hook = config.gitHooks["pre-commit"];
 
     expect(hook).toBeDefined();
-    expect(target).toBeDefined();
 
-    const [hookResult, ciResult] = await Promise.all([
+    const [hookResult, pipelineResult] = await Promise.all([
       executeGitHook({
         hookName: "pre-commit",
         hook,
-        config: hookConfig,
+        config,
       }),
-      executeCiTarget({
-        targetName: "github:pr",
-        target,
-        config: ciConfig,
+      runPipeline({
+        mode: "check",
+        files: [],
+        config,
+        reporterDefinitions: config.profile.reporters,
+        stages: config.profile.pipeline,
       }),
     ]);
 
     expect(hookResult.success).toBe(true);
-    expect(ciResult.success).toBe(true);
+    expect(pipelineResult.success).toBe(true);
 
     const content = await readFile(telemetryPath, "utf8");
     const lines = content
@@ -180,7 +168,7 @@ describe("telemetry runtime integration", () => {
       .slice(1)
       .map((entry) => entry.context)
       .sort();
-    expect(contexts).toEqual(["ci:github:pr:check", "hook:pre-commit:check"]);
+    expect(contexts).toEqual(["hook:pre-commit:check", "pipeline:local:check"]);
 
     for (const entry of entries.slice(1)) {
       expect(Array.isArray(entry.stages)).toBe(true);

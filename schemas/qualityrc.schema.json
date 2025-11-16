@@ -79,10 +79,6 @@
     "gitHooks": {
       "$ref": "#/definitions/gitHooks",
       "description": "Declarative Git hook configuration managed by the quality CLI."
-    },
-    "ciTargets": {
-      "$ref": "#/definitions/ciTargets",
-      "description": "Named CI targets describing how to run quality pipelines in automation."
     }
   },
   "required": ["profiles"],
@@ -269,88 +265,6 @@
       },
       "additionalProperties": false
     },
-    "ciTargets": {
-      "type": "object",
-      "description": "Named CI targets keyed by provider/workflow identifier.",
-      "additionalProperties": { "$ref": "#/definitions/ciTargetConfig" }
-    },
-    "ciTargetConfig": {
-      "type": "object",
-      "properties": {
-        "profile": {
-          "type": "string",
-          "description": "Profile name to resolve for this CI target."
-        },
-        "stages": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Optional subset of stage ids to execute."
-        },
-        "filesMode": {
-          "type": "string",
-          "enum": ["workspace", "commits"],
-          "default": "workspace",
-          "description": "Determine whether the CI run analyses the full workspace or a commit range."
-        },
-        "timeoutMs": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Optional timeout budget in milliseconds."
-        },
-        "reporters": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/reporterDefinition" }
-        },
-        "hooks": {
-          "$ref": "#/definitions/hooks",
-          "description": "Lifecycle hooks scoped to this CI target."
-        },
-        "env": {
-          "type": "object",
-          "description": "Environment variables exported when running this target.",
-          "additionalProperties": { "type": "string" }
-        },
-        "matrix": {
-          "type": "object",
-          "description": "Optional matrix definition for workflow generators.",
-          "additionalProperties": {
-            "type": "array",
-            "items": { "type": "string" }
-          }
-        },
-        "artifacts": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "List of artifact paths to collect after the run."
-        },
-        "autoFix": {
-          "$ref": "#/definitions/autoFixConfig",
-          "description": "Optional auto-fix configuration (disabled by default)."
-        }
-      },
-      "additionalProperties": false
-    },
-    "stageApplicability": {
-      "type": "object",
-      "properties": {
-        "hooks": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Hook names that should execute this stage."
-        },
-        "ciTargets": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "CI target names that should execute this stage."
-        },
-        "paths": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Glob patterns that must match changed files for the stage to run."
-        }
-      },
-      "additionalProperties": false
-    },
     "stageGroup": {
       "description": "Stage grouping options controlling parallel execution.",
       "oneOf": [
@@ -400,7 +314,6 @@
           "type": "array",
           "items": { "$ref": "#/definitions/reporterDefinition" }
         },
-        "appliesTo": { "$ref": "#/definitions/stageApplicability" },
         "options": {
           "type": "object",
           "description": "Adapter-specific options.",
@@ -518,7 +431,6 @@
           "type": "array",
           "items": { "$ref": "#/definitions/reporterDefinition" }
         },
-        "appliesTo": { "$ref": "#/definitions/stageApplicability" },
         "overrides": {
           "type": "object",
           "description": "Adapter-specific option overrides.",

@@ -11,11 +11,9 @@ import type { ResolvedStage } from "../config/types";
 import { runPipeline } from "../pipeline/runner";
 import { ensureReporterDefinitions } from "../reporters/registry";
 import type { ReporterDefinition } from "../reporters/types";
-import { executeCiTarget } from "../runtime/ci-runner";
 import { executeGitHook, isStageFixable } from "../runtime/git-hook-runner";
 import { createConsoleProgressReporter } from "../runtime/progress";
 import { isTelemetryEnabled } from "../runtime/telemetry";
-import { type CiEmitterFormat, emitCiTarget } from "./ci-emitter";
 import { installHooks, listHooks, uninstallHooks } from "./git-hooks";
 
 export abstract class QualityBaseCommand extends Command {
@@ -542,104 +540,6 @@ export class QualityGitHookCommand extends QualityBaseCommand {
   }
 }
 
-export class QualityCiRunCommand extends QualityBaseCommand {
-  static paths = [["ci", "run"]];
-
-  targetName = Option.String({ required: true });
-  baseRef = Option.String("--base-ref");
-  headRef = Option.String("--head-ref");
-
-  async execute(): Promise<number | void> {
-    const config = await this.loadConfig(undefined);
-    const target = config.ciTargets[this.targetName];
-    if (!target) {
-      this.context.stderr.write(
-        `CI target '${this.targetName}' is not defined in .qualityrc.\n`,
-      );
-      process.exitCode = 1;
-      return 1;
-    }
-    try {
-      const reporterOverrides = this.collectReporterOverrides();
-      const result = await executeCiTarget({
-        targetName: this.targetName,
-        target,
-        config,
-        reporterOverrides,
-        env: process.env,
-        baseRef: this.baseRef,
-        headRef: this.headRef,
-      });
-      if (result.skipped) {
-        this.context.stdout.write(
-          `CI target '${this.targetName}' skipped (no matching stages).\n`,
-        );
-      }
-      const exitCode = result.success ? 0 : 1;
-      process.exitCode = exitCode;
-      return exitCode;
-    } catch (error) {
-      this.context.stderr.write(
-        `${error instanceof Error ? error.message : String(error)}\n`,
-      );
-      process.exitCode = 1;
-      return 1;
-    }
-  }
-}
-
-export class QualityCiListCommand extends QualityBaseCommand {
-  static paths = [["ci", "list"]];
-
-  async execute(): Promise<void> {
-    const config = await this.loadConfig(undefined);
-    const entries = Object.entries(config.ciTargets);
-    if (entries.length === 0) {
-      this.context.stdout.write("No CI targets defined in configuration.\n");
-      return;
-    }
-    this.context.stdout.write("Available CI targets:\n");
-    for (const [name, target] of entries) {
-      this.context.stdout.write(
-        ` - ${name} (profile: ${target.profile}, filesMode: ${target.filesMode})\n`,
-      );
-    }
-  }
-}
-
-export class QualityCiEmitCommand extends QualityBaseCommand {
-  static paths = [["ci", "emit"]];
-
-  targetName = Option.String({ required: true });
-  format = Option.String("--format", "github");
-
-  async execute(): Promise<void> {
-    const config = await this.loadConfig(undefined);
-    const target = config.ciTargets[this.targetName];
-    if (!target) {
-      this.context.stderr.write(
-        `CI target '${this.targetName}' is not defined in .qualityrc.\n`,
-      );
-      process.exitCode = 1;
-      return;
-    }
-    try {
-      const format = (this.format ?? "github").toLowerCase() as CiEmitterFormat;
-      const output = emitCiTarget({
-        targetName: this.targetName,
-        target,
-        format,
-      });
-      this.context.stdout.write(`${output}\n`);
-    } catch (error) {
-      this.context.stderr.write(
-        `${error instanceof Error ? error.message : String(error)}\n`,
-      );
-      process.exitCode = 1;
-    }
-  }
-}
-
 export class QualityInitCommand extends Command {
   static paths = [["init"]];
 
@@ -753,25 +653,6 @@ export class QualityInitCommand extends Command {
                 rerunAfterFix: true,
                 preserveCommitMetadata: true,
               },
-            },
-          },
-        },
-        ciTargets: {
-          "github:pr": {
-            profile: "ci",
-            filesMode: "commits",
-            autoFix: {
-              enabled: false,
-              safety: "force",
-              rerunAfterFix: true,
-              preserveCommitMetadata: true,
-            },
-            env: {
-              CI: "1",
-            },
-            matrix: {
-              node: ["20"],
-              os: ["ubuntu-latest"],
             },
           },
         },

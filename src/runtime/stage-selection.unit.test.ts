@@ -18,7 +18,6 @@ describe("selectStagesForContext", () => {
     mode: overrides.mode,
     reporters: overrides.reporters,
     if: overrides.if,
-    appliesTo: overrides.appliesTo,
   });
 
   it("returns all stages when no filters applied", () => {
@@ -38,30 +37,6 @@ describe("selectStagesForContext", () => {
       context: { kind: "hook", name: "pre-commit" },
     });
     expect(result.map((stage) => stage.id)).toEqual(["b"]);
-  });
-
-  it("respects hook applicability", () => {
-    const stages = [
-      baseStage({ id: "a", appliesTo: { hooks: ["pre-commit"] } }),
-      baseStage({ id: "b", appliesTo: { hooks: ["pre-push"] } }),
-    ];
-    const result = selectStagesForContext({
-      stages,
-      context: { kind: "hook", name: "pre-commit" },
-    });
-    expect(result.map((stage) => stage.id)).toEqual(["a"]);
-  });
-
-  it("respects CI applicability", () => {
-    const stages = [
-      baseStage({ id: "a", appliesTo: { ciTargets: ["github:pr"] } }),
-      baseStage({ id: "b", appliesTo: { ciTargets: ["gitlab:ci"] } }),
-    ];
-    const result = selectStagesForContext({
-      stages,
-      context: { kind: "ci", name: "github:pr" },
-    });
-    expect(result.map((stage) => stage.id)).toEqual(["a"]);
   });
 
   it("filters by changed files when requested", () => {

@@ -77,9 +77,9 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
 
 ## Configuration reference
 
-### Git hooks & CI targets
+### Git hooks
 
-`.qualityrc` can manage Git hook automation and declarative CI entry points:
+`.qualityrc` can manage Git hook automation:
 
 ```jsonc
 {
@@ -92,23 +92,12 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
         "autoFix": { "enabled": true, "safety": "confirm" }
       }
     }
-  },
-  "ciTargets": {
-    "github:pr": {
-      "profile": "ci",
-      "filesMode": "commits",
-      "env": { "CI": "1" },
-      "matrix": { "node": ["20"], "os": ["ubuntu-latest"] }
-    }
   }
 }
 ```
 
 - `quality hooks install` materialises hook scripts under `.git/hooks/*` (only when `manage` is true). Scripts are idempotent, include a marker header, and call back into `quality git-hook <name>`.
 - `quality git-hook <name>` runs the configured stages in hook context, respecting auto-fix policies and safeguards inherited from Phase 1.
-- `quality ci run <target>` executes the shared context runner with either workspace changes or a commit diff (resolved from `QUALITY_CI_*`/GitHub/GitLab env vars).
-- `quality ci emit` renders starter YAML for GitHub Actions (`--format github`), GitLab (`gitlab`), or a generic runner (`generic`).
-- `autoFix.enabled` defaults to `false` for CI targets; enabling it requires `safety: "force"` so the runner cannot pause for prompts.
 
 ### Stage definitions
 
@@ -222,9 +211,6 @@ Commands:
   quality hooks uninstall
   quality hooks list
   quality git-hook <name>
-  quality ci run <target> [--base-ref <ref>] [--head-ref <ref>]
-  quality ci list
-  quality ci emit <target> [--format github|gitlab|generic]
   quality validate-config [--profile <name>] [--stage <id>]
   quality init [--cwd <path>]
 ```
@@ -236,7 +222,6 @@ Highlights:
 - `quality run --stage` executes a single stage ad-hoc (useful for command adapters or debugging).
 - `--reporter` can be repeated; `--json <path>` adds the JSON reporter automatically.
 - `quality hooks install` writes deterministic `.git/hooks/*` scripts that invoke `quality git-hook <name>`; use `quality hooks list` to audit managed scripts and `quality hooks uninstall` to clean them up.
-- `quality ci run <target>` executes the declarative CI target runner; `quality ci emit` prints starter YAML for GitHub/GitLab jobs, and `quality ci list` summarizes available targets.
 
 ## Nested configs
 

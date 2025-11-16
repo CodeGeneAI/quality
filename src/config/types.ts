@@ -5,8 +5,6 @@ export type QualityMode = "check" | "fix";
 
 export type GitHookFilesMode = "staged" | "workspace" | "commits";
 
-export type CiFilesMode = "workspace" | "commits";
-
 export type StageGroupReference = string | StageGroupConfig;
 
 export interface StageGroupConfig {
@@ -30,7 +28,6 @@ export interface QualityStageDefinition {
   readonly continueOnError?: boolean;
   readonly if?: string;
   readonly reporters?: readonly ReporterDefinition[];
-  readonly appliesTo?: StageApplicability;
 }
 
 export interface StagePresetDefinition {
@@ -44,13 +41,6 @@ export interface StagePresetDefinition {
   readonly if?: string;
   readonly reporters?: readonly ReporterDefinition[];
   readonly options?: Record<string, unknown>;
-  readonly appliesTo?: StageApplicability;
-}
-
-export interface StageApplicability {
-  readonly hooks?: readonly string[];
-  readonly ciTargets?: readonly string[];
-  readonly paths?: readonly string[];
 }
 
 export interface StageAdapterCatalogEntry {
@@ -94,7 +84,6 @@ export interface QualityConfig {
   readonly reporters?: readonly ReporterDefinition[];
   readonly hooks?: QualityHooksConfig;
   readonly gitHooks?: GitHooksConfig;
-  readonly ciTargets?: Record<string, CiTargetConfig>;
 }
 
 export interface AutoFixConfig {
@@ -122,19 +111,6 @@ export interface GitHooksConfig {
   readonly hooks?: Record<string, GitHookConfig>;
 }
 
-export interface CiTargetConfig {
-  readonly profile?: string;
-  readonly stages?: readonly string[];
-  readonly filesMode?: CiFilesMode;
-  readonly timeoutMs?: number;
-  readonly reporters?: readonly ReporterDefinition[];
-  readonly hooks?: QualityHooksConfig;
-  readonly env?: Record<string, string>;
-  readonly matrix?: Record<string, readonly string[]>;
-  readonly artifacts?: readonly string[];
-  readonly autoFix?: AutoFixConfig;
-}
-
 export interface ResolvedAutoFixConfig {
   readonly enabled: boolean;
   readonly amendCommit: boolean;
@@ -154,20 +130,6 @@ export interface ResolvedGitHookConfig {
   readonly autoFix: ResolvedAutoFixConfig;
   readonly env?: Record<string, string>;
   readonly onlyChangedStageGroups?: boolean;
-}
-
-export interface ResolvedCiTarget {
-  readonly name: string;
-  readonly profile: string;
-  readonly stages?: readonly string[];
-  readonly filesMode: CiFilesMode;
-  readonly timeoutMs?: number;
-  readonly reporters?: readonly ReporterDefinition[];
-  readonly hooks?: QualityHooksConfig;
-  readonly env?: Record<string, string>;
-  readonly matrix?: Record<string, readonly string[]>;
-  readonly artifacts?: readonly string[];
-  readonly autoFix: ResolvedAutoFixConfig;
 }
 
 export interface ResolvedStageGroup {

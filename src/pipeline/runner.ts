@@ -461,9 +461,6 @@ const buildStageMatchPatterns = (stage: ResolvedStage): string[] => {
   if (stage.files) {
     patterns.push(...stage.files);
   }
-  if (stage.appliesTo?.paths) {
-    patterns.push(...stage.appliesTo.paths);
-  }
   return patterns;
 };
 

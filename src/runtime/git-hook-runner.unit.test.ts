@@ -116,7 +116,6 @@ const createStage = (
   mode: overrides.mode,
   reporters: overrides.reporters,
   if: overrides.if,
-  appliesTo: overrides.appliesTo,
 });
 
 const createConfig = (
@@ -128,7 +127,6 @@ const createConfig = (
   stageCatalog: {},
   gitHooksManage: true,
   gitHooks: {},
-  ciTargets: {},
   profile: {
     name: "test",
     pipeline: stages,

@@ -8,7 +8,6 @@ import { loadTsConfigModule } from "../utils/module-loader";
 import { dirname, joinPaths, relativePath, resolvePath } from "../utils/path";
 import type {
   AutoFixConfig,
-  CiTargetConfig,
   GitHookConfig,
   GitHooksConfig,
   LoadConfigOptions,
@@ -17,13 +16,11 @@ import type {
   QualityProfileConfig,
   QualityStageDefinition,
   ResolvedAutoFixConfig,
-  ResolvedCiTarget,
   ResolvedGitHookConfig,
   ResolvedQualityProfile,
   ResolvedStage,
   ResolvedStageGroup,
   StageAdapterCatalogEntry,
-  StageApplicability,
   StageCatalogConfig,
   StageGroupConfig,
   StageGroupReference,
@@ -51,7 +48,6 @@ export interface ResolvedConfig {
   readonly adapters: readonly string[];
   readonly gitHooksManage: boolean;
   readonly gitHooks: Record<string, ResolvedGitHookConfig>;
-  readonly ciTargets: Record<string, ResolvedCiTarget>;
 }
 
 export const loadQualityConfig = async (
@@ -73,7 +69,6 @@ export const loadQualityConfig = async (
   let rootHooks = baseConfig.config.hooks;
   let rootReporters = baseConfig.config.reporters;
   let gitHooksState = createGitHooksState(baseConfig.config.gitHooks);
-  let ciTargetsState = createCiTargetsState(baseConfig.config.ciTargets);
   const adapterPaths = new Set<string>(
     resolveAdapterPaths(baseConfig.directory, baseConfig.config.adapters ?? []),
   );
@@ -98,10 +93,6 @@ export const loadQualityConfig = async (
         gitHooksState,
         override.config.gitHooks,
       );
-      ciTargetsState = mergeCiTargetsState(
-        ciTargetsState,
-        override.config.ciTargets,
-      );
       for (const adapterPath of resolveAdapterPaths(
         override.directory,
         override.config.adapters ?? [],
@@ -123,11 +114,6 @@ export const loadQualityConfig = async (
   );
 
   const resolvedGitHooks = resolveGitHooksConfigs(gitHooksState, profileName);
-  const resolvedCiTargets = resolveCiTargetsConfigs(
-    ciTargetsState,
-    profileName,
-  );
-
   return {
     root,
     profile: {
@@ -140,7 +126,6 @@ export const loadQualityConfig = async (
     adapters: Array.from(adapterPaths),
     gitHooksManage: gitHooksState.manage ?? true,
     gitHooks: resolvedGitHooks,
-    ciTargets: resolvedCiTargets,
   } satisfies ResolvedConfig;
 };
 
@@ -290,7 +275,6 @@ const mergePresetDefinition = (
   continueOnError: next.continueOnError ?? base.continueOnError,
   if: next.if ?? base.if,
   reporters: next.reporters ?? base.reporters,
-  appliesTo: mergeApplicability(base.appliesTo, next.appliesTo),
   options: mergeDeep(base.options ?? {}, next.options ?? {}),
 });
 
@@ -309,8 +293,6 @@ const resolveStage = (
   const group = resolveStageGroup(stage.group ?? preset?.group);
   const options = mergeDeep(preset?.options ?? {}, stage.overrides ?? {});
   const continueOnError = resolveContinueOnError(stage, preset, group, options);
-  const appliesTo = mergeApplicability(preset?.appliesTo, stage.appliesTo);
-
   return {
     id: stage.id,
     type: stage.type,
@@ -323,7 +305,6 @@ const resolveStage = (
     continueOnError,
     if: stage.if ?? preset?.if,
     reporters: stage.reporters ?? preset?.reporters,
-    appliesTo,
     options,
   } satisfies ResolvedStage;
 };
@@ -450,71 +431,9 @@ const clonePresetMap = (
   return result;
 };
 
-const mergeApplicability = (
-  base: StageApplicability | undefined,
-  next: StageApplicability | undefined,
-): StageApplicability | undefined => {
-  if (!base && !next) {
-    return undefined;
-  }
-  if (!base) {
-    return cloneApplicability(next);
-  }
-  if (!next) {
-    return cloneApplicability(base);
-  }
-  const hooks = mergeStringArray(base.hooks, next.hooks);
-  const ciTargets = mergeStringArray(base.ciTargets, next.ciTargets);
-  const paths = mergeStringArray(base.paths, next.paths);
-  return {
-    hooks: hooks ?? undefined,
-    ciTargets: ciTargets ?? undefined,
-    paths: paths ?? undefined,
-  } satisfies StageApplicability;
-};
-
-const cloneApplicability = (
-  source: StageApplicability | undefined,
-): StageApplicability | undefined => {
-  if (!source) {
-    return undefined;
-  }
-  return {
-    hooks: source.hooks ? source.hooks.slice() : undefined,
-    ciTargets: source.ciTargets ? source.ciTargets.slice() : undefined,
-    paths: source.paths ? source.paths.slice() : undefined,
-  } satisfies StageApplicability;
-};
-
-const mergeStringArray = (
-  base: readonly string[] | undefined,
-  next: readonly string[] | undefined,
-): string[] | undefined => {
-  if (!base && !next) {
-    return undefined;
-  }
-  const combined = [...(base ?? []), ...(next ?? [])];
-  if (combined.length === 0) {
-    return undefined;
-  }
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const value of combined) {
-    if (!seen.has(value)) {
-      seen.add(value);
-      result.push(value);
-    }
-  }
-  return result;
-};
-
 interface GitHooksState {
   readonly manage?: boolean;
   readonly hooks: Record<string, GitHookConfig>;
-}
-
-interface CiTargetsState {
-  readonly targets: Record<string, CiTargetConfig>;
 }
 
 const createGitHooksState = (
@@ -576,72 +495,6 @@ const resolveGitHooksConfigs = (
   return resolved;
 };
 
-const createCiTargetsState = (
-  config: Record<string, CiTargetConfig> | undefined,
-): CiTargetsState => {
-  if (!config) {
-    return { targets: {} } satisfies CiTargetsState;
-  }
-  const targets: Record<string, CiTargetConfig> = {};
-  for (const [name, target] of Object.entries(config)) {
-    targets[name] = cloneCiTargetConfig(target);
-  }
-  return { targets } satisfies CiTargetsState;
-};
-
-const mergeCiTargetsState = (
-  base: CiTargetsState,
-  next: Record<string, CiTargetConfig> | undefined,
-): CiTargetsState => {
-  if (!next) {
-    return base;
-  }
-  const targets = { ...base.targets } as Record<string, CiTargetConfig>;
-  for (const [name, target] of Object.entries(next)) {
-    const existing = targets[name];
-    targets[name] = existing
-      ? mergeCiTargetConfig(existing, target)
-      : cloneCiTargetConfig(target);
-  }
-  return { targets } satisfies CiTargetsState;
-};
-
-const resolveCiTargetsConfigs = (
-  state: CiTargetsState,
-  defaultProfile: string,
-): Record<string, ResolvedCiTarget> => {
-  const resolved: Record<string, ResolvedCiTarget> = {};
-  for (const [name, target] of Object.entries(state.targets)) {
-    resolved[name] = {
-      name,
-      profile: target.profile ?? defaultProfile,
-      stages: target.stages?.slice(),
-      filesMode: target.filesMode ?? "workspace",
-      timeoutMs: target.timeoutMs,
-      reporters: target.reporters?.slice(),
-      hooks: target.hooks ? { ...target.hooks } : undefined,
-      env: target.env ? { ...target.env } : undefined,
-      matrix: target.matrix ? cloneStringArrayRecord(target.matrix) : undefined,
-      artifacts: target.artifacts?.slice(),
-      autoFix: resolveAutoFixConfig(target.autoFix),
-    } satisfies ResolvedCiTarget;
-  }
-  return resolved;
-};
-
-const cloneStringArrayRecord = (
-  source: Record<string, readonly string[]> | undefined,
-): Record<string, readonly string[]> | undefined => {
-  if (!source) {
-    return undefined;
-  }
-  const result: Record<string, readonly string[]> = {};
-  for (const [key, value] of Object.entries(source)) {
-    result[key] = value.slice();
-  }
-  return result;
-};
-
 const cloneGitHookConfig = (config: GitHookConfig): GitHookConfig => ({
   profile: config.profile,
   stages: config.stages?.slice(),
@@ -670,35 +523,6 @@ const mergeGitHookConfig = (
     typeof next.onlyChangedStageGroups === "boolean"
       ? next.onlyChangedStageGroups
       : base.onlyChangedStageGroups,
-});
-
-const cloneCiTargetConfig = (config: CiTargetConfig): CiTargetConfig => ({
-  profile: config.profile,
-  stages: config.stages?.slice(),
-  filesMode: config.filesMode,
-  timeoutMs: config.timeoutMs,
-  reporters: config.reporters?.slice(),
-  hooks: config.hooks ? { ...config.hooks } : undefined,
-  env: config.env ? { ...config.env } : undefined,
-  matrix: config.matrix ? cloneStringArrayRecord(config.matrix) : undefined,
-  artifacts: config.artifacts?.slice(),
-  autoFix: cloneAutoFixConfig(config.autoFix),
-});
-
-const mergeCiTargetConfig = (
-  base: CiTargetConfig,
-  next: CiTargetConfig,
-): CiTargetConfig => ({
-  profile: next.profile ?? base.profile,
-  stages: next.stages ?? base.stages,
-  filesMode: next.filesMode ?? base.filesMode,
-  timeoutMs: next.timeoutMs ?? base.timeoutMs,
-  reporters: next.reporters ?? base.reporters,
-  hooks: mergeHooks(base.hooks, next.hooks),
-  env: mergeEnv(base.env, next.env),
-  matrix: next.matrix ?? base.matrix,
-  artifacts: next.artifacts ?? base.artifacts,
-  autoFix: mergeAutoFixConfig(base.autoFix, next.autoFix),
 });
 
 const cloneAutoFixConfig = (

@@ -24,17 +24,16 @@ Deliver a single declarative quality pipeline for the monorepo: one CLI, composa
 - `quality init` scaffolds a config with presets, groups, and command examples.
 - `quality hooks install|list|uninstall` manage `.git/hooks/*` scripts (idempotent; `--force` overrides unmanaged scripts). `quality hooks install` skips instantly when the managed scripts already match; the workspace `prepare` script runs it so hooks stay current after installs.
 - `quality git-hook <name>` executes the managed hook pipeline (used by installed scripts and for manual debugging).
-- `quality ci run <target>` executes declarative CI targets; `quality ci emit` outputs starter YAML for GitHub/GitLab/generic runners; `quality ci list` summarises available targets.
+- CI-target commands were removed; focus on core run/list/git-hook flows.
 - Telemetry toggles: `--telemetry stdout|file`, `--telemetry-file <path>`, and `--debug` populate `QUALITY_TELEMETRY*` env vars for JSON diagnostics.
 
 ## Tests & quality gates
 - Run `bun --filter @codesynth-labs/quality lint`, `bun --filter @codesynth-labs/quality typecheck`, and `bun --filter @codesynth-labs/quality test:unit` before committing.
-- Unit tests cover the loader, pipeline semantics (parallel fail-fast vs continue), command adapter behaviours (timeouts, aborts, shell), schema validation, fixtures, and CLI/CI integration.
+- Unit tests cover the loader, pipeline semantics (parallel fail-fast vs continue), command adapter behaviours (timeouts, aborts, shell), schema validation, fixtures, and CLI/git-hook integration.
 - Integration matrix:
-  - `src/runtime/ci-runner.unit.test.ts` exercises workspace + commit diff flows, auto-fix guardrails, and stage applicability.
-  - `src/cli/commands.int.test.ts` provisions temp repos to test hook installation/listing/uninstall, `git-hook`, `ci run`, `ci emit` (GitHub/GitLab/generic), telemetry flags, and failure paths.
-  - `src/cli/ci-emitter.unit.test.ts` snapshots emitter outputs to prevent YAML regressions.
-  - `src/runtime/telemetry.unit.test.ts` verifies stdout/file emission to keep debugging pathways reliable.
+  - `src/cli/commands.int.test.ts` provisions temp repos to test hook installation/listing/uninstall, `git-hook`, telemetry flags, and failure paths.
+  - `src/runtime/telemetry.int.test.ts` verifies stdout/file emission to keep debugging pathways reliable across hook + pipeline runs.
+  - `src/runtime/telemetry.unit.test.ts` covers low-level telemetry helpers.
 - Maintain fixture configs (`basic`, `presets`, `adapters`) alongside schema changes to ensure backwards compatibility.
 
 ## Release checklist

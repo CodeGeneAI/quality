@@ -4,9 +4,6 @@ import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runGit } from "../utils/git";
 import {
-  QualityCiEmitCommand,
-  QualityCiListCommand,
-  QualityCiRunCommand,
   QualityGitHookCommand,
   QualityHooksInstallCommand,
   QualityHooksListCommand,
@@ -89,18 +86,6 @@ const baseConfig = {
           rerunAfterFix: true,
           preserveCommitMetadata: true,
         },
-      },
-    },
-  },
-  ciTargets: {
-    "github:pr": {
-      profile: "ci",
-      filesMode: "workspace",
-      autoFix: {
-        enabled: false,
-        safety: "force",
-        rerunAfterFix: true,
-        preserveCommitMetadata: true,
       },
     },
   },
@@ -236,81 +221,6 @@ describe("CLI commands", () => {
     expect(exitCode).toBe(1);
     expect(process.exitCode).toBe(1);
     expect(ctx.stdout.join("\n")).toContain("[verify] lint:command");
-  });
-
-  it("runs CI target successfully", async () => {
-    await writeFile(join(root, "sample.txt"), "ok\n", "utf8");
-
-    const command = new QualityCiRunCommand();
-    command.targetName = "github:pr";
-    const ctx = createCommandContext();
-    command.context = ctx.context as any;
-    const exitCode = await command.execute();
-    expect(process.exitCode).toBe(0);
-    expect(exitCode).toBe(0);
-  });
-
-  it("fails CI target when pipeline fails", async () => {
-    await writeFile(join(root, "sample.txt"), "fail\n", "utf8");
-
-    const command = new QualityCiRunCommand();
-    command.targetName = "github:pr";
-    const ctx = createCommandContext();
-    command.context = ctx.context as any;
-    const exitCode = await command.execute();
-    expect(process.exitCode).toBe(1);
-    expect(exitCode).toBe(1);
-  });
-
-  it("emits CI job snippet in GitHub format", async () => {
-    const command = new QualityCiEmitCommand();
-    command.targetName = "github:pr";
-    const ctx = createCommandContext();
-    command.context = ctx.context as any;
-    await command.execute();
-    expect(ctx.stdout.join("\n")).toContain("jobs:");
-    expect(ctx.stdout.join("\n")).toContain("quality-github-pr");
-  });
-
-  it("emits CI job snippets for GitLab and generic formats", async () => {
-    const gitlab = new QualityCiEmitCommand();
-    gitlab.targetName = "github:pr";
-    gitlab.format = "gitlab";
-    const gitlabCtx = createCommandContext();
-    gitlab.context = gitlabCtx.context as any;
-    await gitlab.execute();
-    expect(gitlabCtx.stdout.join("\n")).toContain("stage: test");
-
-    const generic = new QualityCiEmitCommand();
-    generic.targetName = "github:pr";
-    generic.format = "generic";
-    const genericCtx = createCommandContext();
-    generic.context = genericCtx.context as any;
-    await generic.execute();
-    expect(genericCtx.stdout.join("\n")).toContain("job:");
-  });
-
-  it("lists CI targets", async () => {
-    const command = new QualityCiListCommand();
-    const ctx = createCommandContext();
-    command.context = ctx.context as any;
-    await command.execute();
-    expect(ctx.stdout.join("\n")).toContain("github:pr");
-  });
-
-  it("enforces CI auto-fix safety guardrails", async () => {
-    const guardedConfig = JSON.parse(JSON.stringify(baseConfig));
-    guardedConfig.ciTargets["github:pr"].autoFix.enabled = true;
-    guardedConfig.ciTargets["github:pr"].autoFix.safety = "confirm";
-    await writeQualityConfig(root, guardedConfig);
-
-    const command = new QualityCiRunCommand();
-    command.targetName = "github:pr";
-    const ctx = createCommandContext();
-    command.context = ctx.context as any;
-    await command.execute();
-    expect(process.exitCode).toBe(1);
-    expect(ctx.stderr.join("\n")).toContain("requires safety");
   });
 
   it("honours telemetry flags for CLI runs", async () => {

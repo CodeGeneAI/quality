@@ -2,9 +2,6 @@
 import { Cli } from "clipanion";
 import packageJson from "../../package.json" with { type: "json" };
 import {
-  QualityCiEmitCommand,
-  QualityCiListCommand,
-  QualityCiRunCommand,
   QualityGitHookCommand,
   QualityHooksInstallCommand,
   QualityHooksListCommand,
@@ -31,9 +28,6 @@ cli.register(QualityHooksInstallCommand);
 cli.register(QualityHooksUninstallCommand);
 cli.register(QualityHooksListCommand);
 cli.register(QualityGitHookCommand);
-cli.register(QualityCiRunCommand);
-cli.register(QualityCiListCommand);
-cli.register(QualityCiEmitCommand);
 cli.register(QualityInitCommand);
 cli.register(QualityValidateCommand);
 

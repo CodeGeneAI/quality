@@ -58,7 +58,6 @@ const createConfig = (
   stageCatalog: {},
   gitHooksManage: true,
   gitHooks: {},
-  ciTargets: {},
   profile: {
     name: "test",
     pipeline: stages,
