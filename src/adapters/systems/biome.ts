@@ -72,9 +72,7 @@ export const biomeAdapter: StageAdapter<BiomeAdapterOptions> = {
 
     return {
       status: "failed",
-      messages: [
-        combinedOutput || "Biome reported violations.",
-      ],
+      messages: [combinedOutput || "Biome reported violations."],
     };
   },
 };

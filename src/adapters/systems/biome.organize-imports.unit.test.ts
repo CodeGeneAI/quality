@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ResolvedStage } from "../../config/types";
-import { biomeAdapter } from "./biome";
 import * as processModule from "../../utils/process";
+import { biomeAdapter } from "./biome";
 
 type AdapterArgs = Parameters<typeof biomeAdapter.run>[0];
 
@@ -10,6 +10,7 @@ const stage: ResolvedStage = {
   type: "biome",
   files: ["foo.ts"],
   continueOnError: false,
+  options: undefined,
 };
 
 describe("biomeAdapter organize-imports", () => {
