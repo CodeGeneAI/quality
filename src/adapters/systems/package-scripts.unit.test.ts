@@ -107,11 +107,7 @@ describe("package-scripts adapter", () => {
     await mkdir(join(root, "node_modules", "oops"), { recursive: true });
     await writeFile(
       join(root, "node_modules", "oops", "package.json"),
-      JSON.stringify(
-        { name: "oops", version: "0.0.0", scripts: {} },
-        null,
-        2,
-      ),
+      JSON.stringify({ name: "oops", version: "0.0.0", scripts: {} }, null, 2),
     );
 
     const result = await packageScriptsAdapter.run({

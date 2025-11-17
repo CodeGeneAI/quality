@@ -187,4 +187,3 @@ describe("package-catalog adapter", () => {
     expect(result.status).toBe("passed");
   });
 });
-
