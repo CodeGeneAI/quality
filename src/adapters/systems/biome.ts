@@ -17,13 +17,14 @@ export const biomeAdapter: StageAdapter<BiomeAdapterOptions> = {
   supportsPartialFiles: true,
   async run(context) {
     const options = context.options ?? {};
-    const args = [
-      "--bun",
-      options.binary ?? "biome",
-      "check",
-      "--diagnostic-level",
-      "error",
-    ] as string[];
+    const args = ["--bun", options.binary ?? "biome"] as string[];
+
+    if (context.mode === "fix") {
+      // organizeImports is a lint rule; lint --write applies the fix.
+      args.push("lint", "--write");
+    } else {
+      args.push("lint", "--diagnostic-level", "error");
+    }
 
     if (options.config) {
       args.push("--config", joinPaths(context.root, options.config));
@@ -31,10 +32,6 @@ export const biomeAdapter: StageAdapter<BiomeAdapterOptions> = {
 
     if (options.cache === false) {
       args.push("--no-cache");
-    }
-
-    if (context.mode === "fix") {
-      args.push("--write");
     }
 
     if (options.flags?.length) {
@@ -59,15 +56,25 @@ export const biomeAdapter: StageAdapter<BiomeAdapterOptions> = {
       };
     }
 
+    const combinedOutput = `${result.stderr}\n${result.stdout}`.trim();
+    const noFilesProcessed = /No files were processed/i.test(combinedOutput);
+
+    if (result.exitCode !== 0 && noFilesProcessed) {
+      return {
+        status: "skipped",
+        messages: ["Biome reported no files to process; skipping stage."],
+      };
+    }
+
     if (result.exitCode === 0) {
       return { status: "passed" };
     }
 
-    const stderr = result.stderr.trim();
-    const stdout = result.stdout.trim();
     return {
       status: "failed",
-      messages: [stderr || stdout || "Biome reported violations."],
+      messages: [
+        combinedOutput || "Biome reported violations.",
+      ],
     };
   },
 };
