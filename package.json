@@ -28,7 +28,6 @@
     "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules/.cache tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
   },
   "dependencies": {
-    "@codesynth-labs/forge-templates": "workspace:*",
     "clipanion": "catalog:cli",
     "diff-match-patch": "catalog:tooling",
     "fast-glob": "catalog:tooling",
