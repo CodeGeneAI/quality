@@ -52,12 +52,14 @@ const checkOnlyAdapter: StageAdapter = {
 const createConfig = (
   stages: readonly ResolvedStage[],
   hooks?: Parameters<typeof ensureHooks>[0],
+  ignore: readonly string[] = [],
 ): ResolvedConfig => ({
   root: process.cwd(),
   adapters: [],
   stageCatalog: {},
   gitHooksManage: true,
   gitHooks: {},
+  ignore,
   profile: {
     name: "test",
     pipeline: stages,
@@ -219,6 +221,44 @@ describe("runPipeline", () => {
       status: "skipped",
     });
     expect(result.stages).toHaveLength(3);
+  });
+
+  it("filters cli-supplied files using global ignore patterns", async () => {
+    const stages = [
+      createStage({
+        id: "stage:files",
+        files: ["src/**/*.ts"],
+      }),
+    ];
+    const config = createConfig(stages, undefined, ["ignored/**"]);
+
+    await runPipeline({
+      mode: "check",
+      files: ["src/index.ts", "ignored/temp.ts"],
+      config,
+      reporterDefinitions: [],
+    });
+
+    expect(observedFiles.get("stage:files")).toEqual(["src/index.ts"]);
+  });
+
+  it("does not drop files that only match built-in defaults", async () => {
+    const stages = [
+      createStage({
+        id: "stage:tmp",
+        files: ["tmp/**/*.ts"],
+      }),
+    ];
+    const config = createConfig(stages);
+
+    await runPipeline({
+      mode: "check",
+      files: ["tmp/work.ts"],
+      config,
+      reporterDefinitions: [],
+    });
+
+    expect(observedFiles.get("stage:tmp")).toEqual(["tmp/work.ts"]);
   });
 
   it("continues pipeline when parallel stage allows errors", async () => {

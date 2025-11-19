@@ -1,6 +1,7 @@
 import fg from "fast-glob";
 import micromatch from "micromatch";
 import { readJsonFile, writeTextFile } from "../../utils/fs";
+import { mergeIgnorePatterns } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
 
@@ -25,6 +26,8 @@ const DEFAULT_SECTIONS: readonly DependencySection[] = [
   "devDependencies",
   "peerDependencies",
 ];
+
+const NODE_MODULES_IGNORE = ["**/node_modules/**"] as const;
 
 const isCatalogVersion = (version: unknown): version is string =>
   typeof version === "string" && version.startsWith("catalog:");
@@ -90,11 +93,16 @@ export const packageCatalogAdapter: StageAdapter<PackageCatalogAdapterOptions> =
         };
       }
 
+      const ignorePatterns = mergeIgnorePatterns(
+        NODE_MODULES_IGNORE,
+        context.ignore,
+      );
+
       const packagePaths = await fg(Array.from(packageGlobs), {
         cwd: context.root,
         dot: false,
         unique: true,
-        ignore: ["**/node_modules/**"],
+        ignore: [...ignorePatterns],
       });
 
       const failures: string[] = [];

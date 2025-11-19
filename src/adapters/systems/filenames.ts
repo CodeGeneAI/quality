@@ -5,7 +5,11 @@ import fg from "fast-glob";
 import { mkdir, rename as renameFile } from "fs/promises";
 import micromatch from "micromatch";
 import { pathExists } from "../../utils/fs";
-import { DEFAULT_GLOB_IGNORE, shouldIgnorePath } from "../../utils/glob";
+import {
+  DEFAULT_GLOB_IGNORE,
+  mergeIgnorePatterns,
+  shouldIgnorePath,
+} from "../../utils/glob";
 import { dirname as getDirname, joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
 
@@ -47,10 +51,13 @@ export const filenameAdapter: StageAdapter<FilenameAdapterOptions> = {
   async run(context) {
     const options = context.options ?? {};
     const include = Array.from(options.include ?? DEFAULT_INCLUDE);
-    const ignore = [
-      ...DEFAULT_IGNORE_PATTERNS,
-      ...(options.ignore ? Array.from(options.ignore) : []),
-    ];
+    const stageIgnore = options.ignore ? Array.from(options.ignore) : [];
+    const ignore = mergeIgnorePatterns(
+      stageIgnore.length > 0
+        ? [...DEFAULT_IGNORE_PATTERNS, ...stageIgnore]
+        : DEFAULT_IGNORE_PATTERNS,
+      context.ignore,
+    );
     const patterns = Array.from(options.patterns ?? DEFAULT_PATTERNS);
     const candidateFiles = resolveCandidateFiles(
       context.root,

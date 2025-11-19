@@ -127,6 +127,7 @@ const createConfig = (
   stageCatalog: {},
   gitHooksManage: true,
   gitHooks: {},
+  ignore: [],
   profile: {
     name: "test",
     pipeline: stages,

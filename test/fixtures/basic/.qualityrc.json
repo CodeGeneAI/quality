@@ -1,5 +1,6 @@
 {
   "$schema": "../../../schemas/qualityrc.schema.json",
+  "ignore": ["fixture-root-ignore/**"],
   "profiles": {
     "local": {
       "pipeline": [

@@ -1,5 +1,9 @@
 import fg from "fast-glob";
-import { DEFAULT_GLOB_IGNORE, shouldIgnorePath } from "../../utils/glob";
+import {
+  DEFAULT_GLOB_IGNORE,
+  mergeIgnorePatterns,
+  shouldIgnorePath,
+} from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
 
@@ -41,10 +45,15 @@ export const bunNativeAdapter: StageAdapter<BunNativeAdapterOptions> = {
       ]),
     );
     const allowedModules = new Set(options.allowedModules ?? []);
-    const ignorePatterns = [
-      ...DEFAULT_IGNORE_PATTERNS,
-      ...(options.ignore ?? []),
-    ];
+    const stageIgnore = options.ignore ?? [];
+    const combinedStageIgnore =
+      stageIgnore.length > 0
+        ? [...DEFAULT_IGNORE_PATTERNS, ...stageIgnore]
+        : DEFAULT_IGNORE_PATTERNS;
+    const ignorePatterns = mergeIgnorePatterns(
+      combinedStageIgnore,
+      context.ignore,
+    );
 
     const files = await resolveFiles(
       context.root,

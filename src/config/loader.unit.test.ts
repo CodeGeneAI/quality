@@ -51,6 +51,7 @@ describe("loadQualityConfig", () => {
     expect(config.profile.reporters).toEqual(["summary"]);
     expect(config.profile.hooks.onStart).toEqual([{ command: "echo start" }]);
     expect(config.profile.hooks.onStageFail).toEqual({});
+    expect(config.ignore).toEqual(["fixture-root-ignore/**"]);
   });
 
   it("merges package-level overrides when target paths are provided", async () => {
@@ -67,6 +68,10 @@ describe("loadQualityConfig", () => {
       (stage) => stage.id === "stub:override",
     );
     expect(overrideStage?.options).toMatchObject({ shouldFail: true });
+    expect(config.ignore).toEqual([
+      "fixture-root-ignore/**",
+      "fixture-app-ignore/**",
+    ]);
   });
 
   it("resolves presets with inheritance and overrides", async () => {

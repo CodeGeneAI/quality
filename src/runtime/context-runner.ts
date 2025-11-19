@@ -2,6 +2,7 @@ import type { ResolvedConfig } from "../config/loader";
 import type { ResolvedStage } from "../config/types";
 import { ensureReporterDefinitions } from "../reporters/registry";
 import type { ReporterDefinition } from "../reporters/types";
+import { shouldIgnorePath } from "../utils/glob";
 import type { StageSelectionContext } from "./stage-selection";
 import { selectStagesForContext } from "./stage-selection";
 
@@ -23,7 +24,8 @@ export interface PrepareExecutionContextOptions {
 export const prepareExecutionContext = (
   options: PrepareExecutionContextOptions,
 ): PreparedExecutionContext => {
-  const files = dedupe(options.files);
+  const ignorePatterns = options.config.ignore ?? [];
+  const files = dedupe(options.files, ignorePatterns);
   const stages = selectStagesForContext({
     stages: options.config.profile.pipeline,
     requestedStageIds: options.requestedStageIds,
@@ -63,7 +65,10 @@ const mergeReporterDefinitions = (
   return combined;
 };
 
-const dedupe = (values: readonly string[]): string[] => {
+const dedupe = (
+  values: readonly string[],
+  ignorePatterns: readonly string[],
+): string[] => {
   if (values.length === 0) {
     return [];
   }
@@ -71,6 +76,9 @@ const dedupe = (values: readonly string[]): string[] => {
   const result: string[] = [];
   for (const value of values) {
     if (value.length === 0) {
+      continue;
+    }
+    if (shouldIgnorePath(value, ignorePatterns)) {
       continue;
     }
     if (!seen.has(value)) {

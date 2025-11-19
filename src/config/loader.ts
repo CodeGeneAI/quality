@@ -48,6 +48,7 @@ export interface ResolvedConfig {
   readonly adapters: readonly string[];
   readonly gitHooksManage: boolean;
   readonly gitHooks: Record<string, ResolvedGitHookConfig>;
+  readonly ignore: readonly string[];
 }
 
 export const loadQualityConfig = async (
@@ -69,6 +70,9 @@ export const loadQualityConfig = async (
   let rootHooks = baseConfig.config.hooks;
   let rootReporters = baseConfig.config.reporters;
   let gitHooksState = createGitHooksState(baseConfig.config.gitHooks);
+  const ignorePatterns = new Set<string>(
+    normalizeIgnorePatterns(baseConfig.config.ignore),
+  );
   const adapterPaths = new Set<string>(
     resolveAdapterPaths(baseConfig.directory, baseConfig.config.adapters ?? []),
   );
@@ -93,6 +97,7 @@ export const loadQualityConfig = async (
         gitHooksState,
         override.config.gitHooks,
       );
+      appendIgnorePatterns(ignorePatterns, override.config.ignore);
       for (const adapterPath of resolveAdapterPaths(
         override.directory,
         override.config.adapters ?? [],
@@ -102,6 +107,7 @@ export const loadQualityConfig = async (
     }
   }
 
+  const ignore = Array.from(ignorePatterns);
   const reporters = ensureReporterDefinitions(
     mergedProfile.reporters ?? rootReporters ?? ["summary"],
   );
@@ -126,6 +132,7 @@ export const loadQualityConfig = async (
     adapters: Array.from(adapterPaths),
     gitHooksManage: gitHooksState.manage ?? true,
     gitHooks: resolvedGitHooks,
+    ignore,
   } satisfies ResolvedConfig;
 };
 
@@ -197,6 +204,24 @@ const mergeProfiles = (
     reporters,
     hooks,
   } satisfies QualityProfileConfig;
+};
+
+const normalizeIgnorePatterns = (patterns?: readonly string[]): string[] => {
+  if (!patterns || patterns.length === 0) {
+    return [];
+  }
+  return patterns
+    .map((pattern) => pattern?.trim())
+    .filter((pattern): pattern is string => Boolean(pattern && pattern.length));
+};
+
+const appendIgnorePatterns = (
+  target: Set<string>,
+  patterns?: readonly string[],
+): void => {
+  for (const pattern of normalizeIgnorePatterns(patterns)) {
+    target.add(pattern);
+  }
 };
 
 const mergeHooks = (

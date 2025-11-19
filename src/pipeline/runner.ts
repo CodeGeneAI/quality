@@ -13,7 +13,11 @@ import type {
 } from "../reporters/types";
 import { debugLog } from "../runtime/debug";
 import { isTelemetryEnabled, publishTelemetry } from "../runtime/telemetry";
-import { DEFAULT_GLOB_IGNORE, shouldIgnorePath } from "../utils/glob";
+import {
+  DEFAULT_GLOB_IGNORE,
+  mergeIgnorePatterns,
+  shouldIgnorePath,
+} from "../utils/glob";
 import {
   type HookRunOutcome,
   runHookSequence,
@@ -47,6 +51,7 @@ interface PipelineContext {
   readonly mode: QualityMode;
   readonly files: readonly string[];
   readonly root: string;
+  readonly ignore: readonly string[];
 }
 
 type StageLifecycleHandler = (stage: ResolvedStage) => void | Promise<void>;
@@ -62,7 +67,7 @@ interface StageEventHandlers {
 export const runPipeline = async (
   options: PipelineRunOptions,
 ): Promise<PipelineRunResult> => {
-  const { config, mode, files } = options;
+  const { config, mode } = options;
   const pipelineStages = options.stages ?? config.profile.pipeline;
   const startedAt = new Date();
   const stageResults: StageResultSummary[] = [];
@@ -71,6 +76,7 @@ export const runPipeline = async (
   const hooks = config.profile.hooks;
   const hookContext = { root: config.root };
   const { onStageStart, onStageComplete } = options;
+  const pipelineFiles = filterIgnoredFiles(options.files, config.ignore);
 
   const recordStageSummary = async (
     summary: StageResultSummary,
@@ -86,7 +92,7 @@ export const runPipeline = async (
     "pipeline",
     () => `starting pipeline (profile=${config.profile.name}, mode=${mode})`,
     () => ({
-      files,
+      files: pipelineFiles,
       stageCount: pipelineStages.length,
       stages: pipelineStages.map((stage) => stage.id),
     }),
@@ -122,8 +128,9 @@ export const runPipeline = async (
           index,
           {
             mode,
-            files,
+            files: pipelineFiles,
             root: config.root,
+            ignore: config.ignore,
           },
           { onStageStart, onStageComplete },
         );
@@ -156,8 +163,9 @@ export const runPipeline = async (
     }
     const outcome = await executeStage(stage, {
       mode,
-      files,
+      files: pipelineFiles,
       root: config.root,
+      ignore: config.ignore,
     });
     await recordStageSummary(outcome.summary);
     if (outcome.summary.status === "failed") {
@@ -204,7 +212,7 @@ export const runPipeline = async (
       context:
         options.telemetry?.context ?? `pipeline:${config.profile.name}:${mode}`,
       result: pipelineResult,
-      files,
+      files: pipelineFiles,
       root: config.root,
       metadata: options.telemetry?.metadata,
     });
@@ -372,6 +380,7 @@ const executeStage = async (
     stage,
     context.files,
     context.root,
+    context.ignore,
   );
   const start = performance.now();
   let result: StageExecutionResult;
@@ -384,6 +393,7 @@ const executeStage = async (
       files: stageFiles,
       options: stage.options ?? {},
       abortSignal: signal,
+      ignore: context.ignore,
     });
   } catch (error) {
     if (signal.aborted) {
@@ -426,16 +436,38 @@ const shouldRunStage = (stage: ResolvedStage): boolean => {
   }
 };
 
-const shouldIgnoreStageFile = (file: string): boolean =>
-  shouldIgnorePath(file, DEFAULT_STAGE_IGNORE_PATTERNS);
+const shouldIgnoreStageFile = (
+  file: string,
+  patterns: readonly string[],
+): boolean => shouldIgnorePath(file, patterns);
+
+const filterIgnoredFiles = (
+  values: readonly string[],
+  patterns: readonly string[] | undefined,
+): string[] => {
+  if (!values || values.length === 0) {
+    return [];
+  }
+  if (!patterns || patterns.length === 0) {
+    return [...values];
+  }
+  return values.filter((file) => !shouldIgnorePath(file, patterns));
+};
 
 const resolveStageFiles = async (
   stage: ResolvedStage,
   cliFiles: readonly string[],
   root: string,
+  globalIgnore: readonly string[],
 ): Promise<string[]> => {
+  const ignorePatterns =
+    cliFiles.length > 0
+      ? [...(globalIgnore ?? [])]
+      : mergeIgnorePatterns(DEFAULT_STAGE_IGNORE_PATTERNS, globalIgnore);
   if (cliFiles.length > 0) {
-    const candidates = cliFiles.filter((file) => !shouldIgnoreStageFile(file));
+    const candidates = cliFiles.filter(
+      (file) => !shouldIgnoreStageFile(file, ignorePatterns),
+    );
     const patterns = buildStageMatchPatterns(stage);
     if (patterns.length === 0) {
       return candidates;
@@ -451,9 +483,9 @@ const resolveStageFiles = async (
   const matches = fg.sync(patterns, {
     cwd: root,
     dot: true,
-    ignore: [...DEFAULT_STAGE_IGNORE_PATTERNS],
+    ignore: [...ignorePatterns],
   });
-  return matches.filter((file) => !shouldIgnoreStageFile(file));
+  return matches.filter((file) => !shouldIgnoreStageFile(file, ignorePatterns));
 };
 
 const buildStageMatchPatterns = (stage: ResolvedStage): string[] => {

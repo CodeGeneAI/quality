@@ -25,3 +25,19 @@ export const shouldIgnorePath = (
   const normalized = normalizePath(file);
   return patterns.some((pattern) => micromatch.isMatch(normalized, pattern));
 };
+
+export const mergeIgnorePatterns = (
+  base: readonly string[],
+  extra?: readonly string[],
+): readonly string[] => {
+  if (!extra || extra.length === 0) {
+    return base;
+  }
+  const merged = new Set<string>(base);
+  for (const pattern of extra) {
+    if (pattern && pattern.length > 0) {
+      merged.add(pattern);
+    }
+  }
+  return Array.from(merged);
+};

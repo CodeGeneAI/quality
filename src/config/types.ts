@@ -77,6 +77,7 @@ export interface QualityConfig {
   readonly $schema?: string;
   readonly adapters?: readonly string[];
   readonly stages?: StageCatalogConfig;
+  readonly ignore?: readonly string[];
   readonly profiles: Record<
     string,
     QualityProfileConfig & { extends?: string }

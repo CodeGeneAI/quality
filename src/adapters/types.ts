@@ -9,6 +9,7 @@ export interface StageExecutionContext<TOptions = unknown> {
   readonly files: readonly string[];
   readonly options: TOptions;
   readonly abortSignal: AbortSignal;
+  readonly ignore: readonly string[];
 }
 
 export interface StageExecutionResult {

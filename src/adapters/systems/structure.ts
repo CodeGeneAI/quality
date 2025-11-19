@@ -1,6 +1,6 @@
 import fg from "fast-glob";
 import path from "path";
-import { DEFAULT_GLOB_IGNORE } from "../../utils/glob";
+import { DEFAULT_GLOB_IGNORE, mergeIgnorePatterns } from "../../utils/glob";
 import type { StageAdapter } from "../types";
 
 type StructureRuleType = "require" | "disallow";
@@ -32,6 +32,10 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
     }
 
     const globCache = new Map<string, string | string[]>();
+    const ignorePatterns = mergeIgnorePatterns(
+      DEFAULT_GLOB_IGNORE,
+      context.ignore,
+    );
 
     const failures: string[] = [];
     await Promise.all(
@@ -39,6 +43,7 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
         const perMatchTargets = await resolvePerMatchTargets(
           rule,
           context.root,
+          ignorePatterns,
         );
         const evaluatedTargets =
           perMatchTargets.size > 0 ? perMatchTargets : new Set(["."]);
@@ -49,7 +54,7 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
             const matches = await fg(globInput, {
               cwd: path.join(context.root, relativeRoot),
               dot: true,
-              ignore: DEFAULT_GLOB_IGNORE,
+              ignore: [...ignorePatterns],
             });
             const displayRoot =
               relativeRoot === "." ? "workspace root" : relativeRoot;
@@ -95,6 +100,7 @@ export const structureAdapter: StageAdapter<StructureAdapterOptions> = {
 const resolvePerMatchTargets = async (
   rule: StructureRule,
   root: string,
+  ignorePatterns: readonly string[],
 ): Promise<Set<string>> => {
   if (!rule.perMatchGlob) {
     return new Set();
@@ -106,7 +112,7 @@ const resolvePerMatchTargets = async (
     {
       cwd: root,
       dot: true,
-      ignore: DEFAULT_GLOB_IGNORE,
+      ignore: [...ignorePatterns],
       onlyDirectories: perMatchKind === "directory",
     },
   );

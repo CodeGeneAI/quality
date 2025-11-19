@@ -24,6 +24,7 @@ const runAdapter = async (root: string, options: StructureAdapterOptions) =>
     stage: createStage(options),
     files: [],
     options,
+    ignore: [],
     abortSignal: new AbortController().signal,
   });
 

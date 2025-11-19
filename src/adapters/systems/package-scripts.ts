@@ -1,5 +1,6 @@
 import fg from "fast-glob";
 import { readJsonFile } from "../../utils/fs";
+import { mergeIgnorePatterns } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
 
@@ -10,6 +11,8 @@ export interface PackageScriptsAdapterOptions {
     readonly message?: string;
   }[];
 }
+
+const NODE_MODULES_IGNORE = ["**/node_modules/**"] as const;
 
 export const packageScriptsAdapter: StageAdapter<PackageScriptsAdapterOptions> =
   {
@@ -26,11 +29,15 @@ export const packageScriptsAdapter: StageAdapter<PackageScriptsAdapterOptions> =
         return { status: "passed" };
       }
 
+      const ignorePatterns = mergeIgnorePatterns(
+        NODE_MODULES_IGNORE,
+        context.ignore,
+      );
       const packagePaths = await fg(Array.from(packageGlobs), {
         cwd: context.root,
         dot: false,
         unique: true,
-        ignore: ["**/node_modules/**"],
+        ignore: [...ignorePatterns],
       });
 
       const failures: string[] = [];

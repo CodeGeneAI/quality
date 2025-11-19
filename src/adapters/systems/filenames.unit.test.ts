@@ -51,6 +51,7 @@ describe("filenameAdapter", () => {
       stage,
       files: ["tests/example.unit.spec.ts"],
       options: stage.options ?? {},
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -69,6 +70,7 @@ describe("filenameAdapter", () => {
       stage,
       files: [],
       options: stage.options ?? {},
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 

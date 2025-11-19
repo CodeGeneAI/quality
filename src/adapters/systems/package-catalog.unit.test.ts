@@ -39,6 +39,7 @@ describe("package-catalog adapter", () => {
       options: {
         packages: ["pkg/package.json"],
       },
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -73,6 +74,7 @@ describe("package-catalog adapter", () => {
       options: {
         packages: ["svc/package.json"],
       },
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -108,6 +110,7 @@ describe("package-catalog adapter", () => {
       options: {
         packages: ["pkg/package.json"],
       },
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -142,6 +145,7 @@ describe("package-catalog adapter", () => {
         packages: ["pkg/package.json"],
         allowlist: ["@codesynth-labs/*"],
       },
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -181,6 +185,7 @@ describe("package-catalog adapter", () => {
       options: {
         packages: ["**/package.json"],
       },
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 

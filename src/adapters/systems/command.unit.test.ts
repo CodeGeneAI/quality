@@ -30,6 +30,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -48,6 +49,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -69,6 +71,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -98,6 +101,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -122,6 +126,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: abortController.signal,
     });
 
@@ -147,6 +152,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -170,6 +176,7 @@ describe("commandAdapter", () => {
       stage,
       files: [],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -198,6 +205,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -226,6 +234,7 @@ describe("commandAdapter", () => {
       stage,
       files: ["src/example.ts"],
       options: stage.options,
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 

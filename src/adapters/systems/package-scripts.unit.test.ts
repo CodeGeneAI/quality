@@ -44,6 +44,7 @@ describe("package-scripts adapter", () => {
         requiredScripts: [{ name: "build" }],
       },
       files: [],
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -80,6 +81,7 @@ describe("package-scripts adapter", () => {
         requiredScripts: [{ name: "build", message: "add build script" }],
       },
       files: [],
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 
@@ -127,6 +129,7 @@ describe("package-scripts adapter", () => {
         requiredScripts: [{ name: "build" }],
       },
       files: [],
+      ignore: [],
       abortSignal: new AbortController().signal,
     });
 

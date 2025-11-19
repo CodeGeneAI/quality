@@ -1,7 +1,11 @@
 import fg from "fast-glob";
 import micromatch from "micromatch";
 import * as ts from "typescript";
-import { DEFAULT_GLOB_IGNORE, shouldIgnorePath } from "../../utils/glob";
+import {
+  DEFAULT_GLOB_IGNORE,
+  mergeIgnorePatterns,
+  shouldIgnorePath,
+} from "../../utils/glob";
 import { extname, joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
 
@@ -33,7 +37,12 @@ export const importExtensionsAdapter: StageAdapter<ImportExtensionsAdapterOption
       const options = context.options ?? {};
       const allowlist = buildAllowlist(options.allowlist ?? {});
       const verbose = options.verbose === true;
-      const files = await resolveFiles(context.root, context.files);
+      const ignorePatterns = mergeIgnorePatterns(
+        DEFAULT_IGNORE_PATTERNS,
+        context.ignore,
+      );
+      const globIgnore = [...ignorePatterns];
+      const files = await resolveFiles(context.root, context.files, globIgnore);
 
       let totalViolations = 0;
       let filesWithViolations = 0;
@@ -170,20 +179,17 @@ const buildAllowlist = (
 const resolveFiles = async (
   root: string,
   files: readonly string[],
+  ignorePatterns: readonly string[],
 ): Promise<string[]> => {
   if (files.length > 0) {
-    return files.filter(
-      (file) => !shouldIgnorePath(file, DEFAULT_IGNORE_PATTERNS),
-    );
+    return files.filter((file) => !shouldIgnorePath(file, ignorePatterns));
   }
   const matches = fg.sync(`**/*.{${TARGET_FILE_EXTENSIONS.join(",")}}`, {
     cwd: root,
     dot: true,
-    ignore: DEFAULT_IGNORE_PATTERNS,
+    ignore: [...ignorePatterns],
   });
-  return matches.filter(
-    (file) => !shouldIgnorePath(file, DEFAULT_IGNORE_PATTERNS),
-  );
+  return matches.filter((file) => !shouldIgnorePath(file, ignorePatterns));
 };
 
 const resolveScriptKind = (filePath: string): ts.ScriptKind => {

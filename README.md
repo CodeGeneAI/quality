@@ -77,6 +77,14 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
 
 ## Configuration reference
 
+### Global ignore
+
+- Set `ignore` at the root of `.qualityrc` to provide glob patterns that should
+  be skipped by every stage. These patterns augment the built-in defaults
+  (`node_modules`, `.git`, caches, etc.) and flow through adapter internals, so a
+  single entry such as `".forge/**"` keeps helper directories out of linting,
+  hooks, and stage-specific globbing.
+
 ### Built-in adapters
 
 - biome — Biome lint/format.

@@ -79,6 +79,13 @@
       "$ref": "#/definitions/hooks",
       "description": "Global hooks merged into each profile."
     },
+    "ignore": {
+      "type": "array",
+      "description": "Glob patterns ignored across every stage (combined with built-in defaults).",
+      "items": {
+        "type": "string"
+      }
+    },
     "gitHooks": {
       "$ref": "#/definitions/gitHooks",
       "description": "Declarative Git hook configuration managed by the quality CLI."
