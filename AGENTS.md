@@ -1,3 +1,10 @@
+<!-- doc-catalog:banner:start -->
+> [!NOTE]
+> This document participates in the Forge documentation catalog. See [documentation catalog](../../README.md#documentation-catalog) for cross-links and regeneration instructions.
+
+_Last synced: 2025-11-20 · Generated via `bun run docs:banners`._
+<!-- doc-catalog:banner:end -->
+
 # Workspace guidance: `@codesynth-labs/quality`
 
 ## Mission

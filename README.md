@@ -1,3 +1,10 @@
+<!-- doc-catalog:banner:start -->
+> [!NOTE]
+> This document participates in the Forge documentation catalog. See [documentation catalog](../../README.md#documentation-catalog) for cross-links and regeneration instructions.
+
+_Last synced: 2025-11-20 · Generated via `bun run docs:banners`._
+<!-- doc-catalog:banner:end -->
+
 # @codesynth-labs/quality
 
 Unified quality suite for the Forge Platform monorepo. The package ships the `quality` CLI, a declarative pipeline runner, built-in adapters for linting/validation, JSON schema tooling, and fixtures/tests. Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json`, `.qualityrc.jsonc`, `.qualityrc.ts`, and `.qualityrc.(mjs|cjs)` so teams can use comments/trailing commas or TypeScript when needed.
@@ -26,7 +33,7 @@ CLI shims that previously forwarded `quality check --gate <name>` now dispatch v
 ## Getting started
 
 1. Ensure dependencies are installed: `bun install` at the repo root.
-2. Generate a starter configuration: `bun --bun packages/quality/src/cli/index.ts init` (or `bun run quality:init`). The template demonstrates presets, command stages, and grouped adapters.
+2. Generate a starter configuration: `bun --bun packages/quality/src/cli/index.ts init` (or `bun run quality:init`). The stack demonstrates presets, command stages, and grouped adapters.
 3. Reference the schema inside `.qualityrc` files to enable editor IntelliSense:
 
 ```jsonc
@@ -93,7 +100,7 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
 - filenames — enforce test/fixture naming.
 - structure — require presence/absence of files.
 - command — run arbitrary commands.
-- template-check — validate template manifests.
+- stack-check — validate stack manifests.
 - metadata-verify — validate metadata files.
 - package-scripts — enforce required scripts in `package.json` files.
 - package-catalog — enforce dependency versions use `catalog:<name>` (or `workspace:`) with optional fix-mode rewrite using the root catalogs map.
@@ -127,7 +134,7 @@ Example stage:
       "packages/*/*/*/package.json",
       "services/*/package.json",
       "apps/*/package.json",
-      "!packages/forge-templates/templates/**/package.json"
+      "!packages/forge-stacks/stacks/**/package.json"
     ],
     "allowlist": ["@codesynth-labs/*"]
   }

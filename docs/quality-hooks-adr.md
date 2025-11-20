@@ -29,8 +29,8 @@
 5) **Telemetry & context:**
    - Keep existing telemetry context strings; prepend folder-based execution metadata where useful (e.g., `hook:<hook>:check`).
 
-6) **Docs & templates:**
-   - Update README/AGENTS and `quality init` template output to describe `.quality/`, the helper script, and recommended `prepare` script.
+6) **Docs & stacks:**
+   - Update README/AGENTS and `quality init` stack output to describe `.quality/`, the helper script, and recommended `prepare` script.
 
 ## Alternatives considered
 

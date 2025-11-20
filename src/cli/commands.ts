@@ -549,7 +549,7 @@ export class QualityInitCommand extends Command {
       this.context.stdout.write(".qualityrc already exists.\n");
       return;
     }
-    const template = JSON.stringify(
+    const stack = JSON.stringify(
       {
         $schema: "./packages/quality/schemas/qualityrc.schema.json",
         stages: {
@@ -650,7 +650,7 @@ export class QualityInitCommand extends Command {
       null,
       2,
     );
-    await Bun.write(target, `${template}\n`);
+    await Bun.write(target, `${stack}\n`);
     this.context.stdout.write("Created .qualityrc.json\n");
   }
 }

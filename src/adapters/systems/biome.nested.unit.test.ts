@@ -11,8 +11,8 @@ const originalCwd = process.cwd();
 const fixtureRoot = fileURLToPath(
   new URL("../../../test/fixtures/biome-nested", import.meta.url),
 );
-const templateRootConfig = join(fixtureRoot, "biome.root.json");
-const templateNestedConfig = join(
+const stackRootConfig = join(fixtureRoot, "biome.root.json");
+const stackNestedConfig = join(
   fixtureRoot,
   "packages/nested/biome.override.json",
 );
@@ -23,8 +23,8 @@ describe("biome adapter configuration resolution", () => {
   beforeEach(async () => {
     resetAdapters();
     registerBuiltInAdapters();
-    await cp(templateRootConfig, runtimeRootConfig, { errorOnExist: false });
-    await cp(templateNestedConfig, runtimeNestedConfig, {
+    await cp(stackRootConfig, runtimeRootConfig, { errorOnExist: false });
+    await cp(stackNestedConfig, runtimeNestedConfig, {
       errorOnExist: false,
     });
     process.chdir(fixtureRoot);
