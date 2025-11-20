@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as gitHookRunner from "../runtime/git-hook-runner";
 import { runGit } from "../utils/git";
 import {
   QualityGitHookCommand,
@@ -180,6 +181,30 @@ describe("CLI commands", () => {
     const exitCode = await command.execute();
     expect(exitCode).toBe(1);
     expect(process.exitCode).toBe(1);
+  });
+
+  it("passes git hook arguments through to the execution runner", async () => {
+    const spy = vi
+      .spyOn(gitHookRunner, "executeGitHook")
+      .mockResolvedValue({
+        success: true,
+        fixesApplied: false,
+        skipped: false,
+        files: [],
+        stages: [],
+      });
+
+    const command = new QualityGitHookCommand();
+    command.hookName = "pre-commit";
+    command.hookArgs = ["origin", "main"];
+    const ctx = createCommandContext();
+    command.context = ctx.context as any;
+    await command.execute();
+
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({ gitArgs: ["origin", "main"] }),
+    );
+    spy.mockRestore();
   });
 
   it("skips unsupported stages when running fix", async () => {

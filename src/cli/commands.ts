@@ -497,6 +497,7 @@ export class QualityGitHookCommand extends QualityBaseCommand {
   static paths = [["git-hook"]];
 
   hookName = Option.String({ required: true });
+  hookArgs = Option.Rest({ name: "gitArgs", required: 0 });
 
   async execute(): Promise<number | void> {
     const config = await this.loadConfig(undefined);
@@ -515,6 +516,7 @@ export class QualityGitHookCommand extends QualityBaseCommand {
         hook: hookConfig,
         config,
         reporterOverrides,
+        gitArgs: this.hookArgs,
       });
       if (result.skipped) {
         this.context.stdout.write(

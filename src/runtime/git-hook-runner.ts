@@ -28,6 +28,7 @@ export interface GitHookExecutionOptions {
   readonly config: ResolvedConfig;
   readonly reporterOverrides?: readonly ReporterDefinition[];
   readonly prompt?: PromptFn;
+  readonly gitArgs?: readonly string[];
 }
 
 export interface GitHookExecutionResult {
@@ -44,106 +45,73 @@ export const executeGitHook = async (
   const hookConfig = options.hook;
   const root = options.config.root;
   const prompt = options.prompt ?? defaultPrompt;
+  const cleanupGitArgsEnv = applyGitArgsEnvironment(options.gitArgs);
 
-  const rawFiles = await collectHookFiles(root, hookConfig.filesMode);
-  const telemetryEnabled = isTelemetryEnabled();
-  const buildTelemetry = (phase: "check" | "fix" | "verify") => {
-    if (!telemetryEnabled) {
-      return undefined;
-    }
-    return {
-      context: `hook:${options.hookName}:${phase}`,
-      metadata: {
-        hook: options.hookName,
-        filesMode: hookConfig.filesMode,
-        profile: options.config.profile.name,
-        phase,
+  try {
+    const rawFiles = await collectHookFiles(root, hookConfig.filesMode);
+    const telemetryEnabled = isTelemetryEnabled();
+    const buildTelemetry = (phase: "check" | "fix" | "verify") => {
+      if (!telemetryEnabled) {
+        return undefined;
+      }
+      return {
+        context: `hook:${options.hookName}:${phase}`,
+        metadata: {
+          hook: options.hookName,
+          filesMode: hookConfig.filesMode,
+          profile: options.config.profile.name,
+          phase,
+        },
+      } as const;
+    };
+
+    const prepared = prepareExecutionContext({
+      config: options.config,
+      files: rawFiles,
+      requestedStageIds: hookConfig.stages,
+      reporterOverrides: options.reporterOverrides,
+      context: {
+        kind: "hook",
+        name: options.hookName,
+        changedFiles: rawFiles,
+        onlyChangedStageGroups: hookConfig.onlyChangedStageGroups,
       },
-    } as const;
-  };
+    });
 
-  const prepared = prepareExecutionContext({
-    config: options.config,
-    files: rawFiles,
-    requestedStageIds: hookConfig.stages,
-    reporterOverrides: options.reporterOverrides,
-    context: {
-      kind: "hook",
-      name: options.hookName,
-      changedFiles: rawFiles,
-      onlyChangedStageGroups: hookConfig.onlyChangedStageGroups,
-    },
-  });
+    if (prepared.skipped) {
+      return {
+        success: true,
+        fixesApplied: false,
+        skipped: true,
+        files: prepared.files,
+        stages: prepared.stages,
+      } satisfies GitHookExecutionResult;
+    }
 
-  if (prepared.skipped) {
-    return {
-      success: true,
-      fixesApplied: false,
-      skipped: true,
-      files: prepared.files,
-      stages: prepared.stages,
-    } satisfies GitHookExecutionResult;
-  }
+    const files = prepared.files;
+    const stages = prepared.stages;
+    const reporterDefinitions = prepared.reporters;
 
-  const files = prepared.files;
-  const stages = prepared.stages;
-  const reporterDefinitions = prepared.reporters;
-
-  const baseResult = await runPipeline({
-    mode: "check",
-    files,
-    config: options.config,
-    reporterDefinitions,
-    stages,
-    telemetry: buildTelemetry("check"),
-  });
-
-  if (baseResult.success) {
-    return {
-      success: true,
-      fixesApplied: false,
-      skipped: false,
+    const baseResult = await runPipeline({
+      mode: "check",
       files,
+      config: options.config,
+      reporterDefinitions,
       stages,
-    } satisfies GitHookExecutionResult;
-  }
+      telemetry: buildTelemetry("check"),
+    });
 
-  if (!hookConfig.autoFix.enabled) {
-    return {
-      success: false,
-      fixesApplied: false,
-      skipped: false,
-      files,
-      stages,
-    } satisfies GitHookExecutionResult;
-  }
+    if (baseResult.success) {
+      return {
+        success: true,
+        fixesApplied: false,
+        skipped: false,
+        files,
+        stages,
+      } satisfies GitHookExecutionResult;
+    }
 
-  if (hookConfig.filesMode !== "staged") {
-    return {
-      success: false,
-      fixesApplied: false,
-      skipped: false,
-      files,
-      stages,
-    } satisfies GitHookExecutionResult;
-  }
-
-  const fixableStages = stages.filter((stage) => isStageFixable(stage));
-  if (fixableStages.length === 0) {
-    return {
-      success: false,
-      fixesApplied: false,
-      skipped: false,
-      files,
-      stages,
-    } satisfies GitHookExecutionResult;
-  }
-
-  if (hookConfig.autoFix.safety === "confirm") {
-    const proceed = await prompt(
-      `Allow auto-fix for git hook '${options.hookName}'? (y/N) `,
-    );
-    if (!proceed) {
+    if (!hookConfig.autoFix.enabled) {
       return {
         success: false,
         fixesApplied: false,
@@ -152,45 +120,105 @@ export const executeGitHook = async (
         stages,
       } satisfies GitHookExecutionResult;
     }
-  }
 
-  const unstagedSnapshots = await captureUnstagedSnapshots(root);
-  const stagedSnapshot = await exportPatch(root, ["--cached", "--binary"]);
+    if (hookConfig.filesMode !== "staged") {
+      return {
+        success: false,
+        fixesApplied: false,
+        skipped: false,
+        files,
+        stages,
+      } satisfies GitHookExecutionResult;
+    }
 
-  await resetHard(root);
-  if (stagedSnapshot.trim()) {
-    await applyPatchToWorktree(root, stagedSnapshot);
-    await applyPatchToIndex(root, stagedSnapshot);
-  }
+    const fixableStages = stages.filter((stage) => isStageFixable(stage));
+    if (fixableStages.length === 0) {
+      return {
+        success: false,
+        fixesApplied: false,
+        skipped: false,
+        files,
+        stages,
+      } satisfies GitHookExecutionResult;
+    }
 
-  try {
-    const fixStages = fixableStages.map(
-      (stage) =>
-        ({
-          ...stage,
-          mode: "fix",
-        }) satisfies ResolvedStage,
-    );
+    if (hookConfig.autoFix.safety === "confirm") {
+      const proceed = await prompt(
+        `Allow auto-fix for git hook '${options.hookName}'? (y/N) `,
+      );
+      if (!proceed) {
+        return {
+          success: false,
+          fixesApplied: false,
+          skipped: false,
+          files,
+          stages,
+        } satisfies GitHookExecutionResult;
+      }
+    }
 
-    await runPipeline({
-      mode: "fix",
-      files,
-      config: options.config,
-      reporterDefinitions,
-      stages: fixStages,
-      telemetry: buildTelemetry("fix"),
-    });
+    const unstagedSnapshots = await captureUnstagedSnapshots(root);
+    const stagedSnapshot = await exportPatch(root, ["--cached", "--binary"]);
 
-    const verifyResult = await runPipeline({
-      mode: "check",
-      files,
-      config: options.config,
-      reporterDefinitions,
-      stages,
-      telemetry: buildTelemetry("verify"),
-    });
+    await resetHard(root);
+    if (stagedSnapshot.trim()) {
+      await applyPatchToWorktree(root, stagedSnapshot);
+      await applyPatchToIndex(root, stagedSnapshot);
+    }
 
-    if (!verifyResult.success) {
+    try {
+      const fixStages = fixableStages.map(
+        (stage) =>
+          ({
+            ...stage,
+            mode: "fix",
+          }) satisfies ResolvedStage,
+      );
+
+      await runPipeline({
+        mode: "fix",
+        files,
+        config: options.config,
+        reporterDefinitions,
+        stages: fixStages,
+        telemetry: buildTelemetry("fix"),
+      });
+
+      const verifyResult = await runPipeline({
+        mode: "check",
+        files,
+        config: options.config,
+        reporterDefinitions,
+        stages,
+        telemetry: buildTelemetry("verify"),
+      });
+
+      if (!verifyResult.success) {
+        await restoreOriginalState(root, stagedSnapshot, unstagedSnapshots);
+        return {
+          success: false,
+          fixesApplied: true,
+          skipped: false,
+          files,
+          stages,
+        } satisfies GitHookExecutionResult;
+      }
+
+      const changed = await collectFilesToStage(root, files);
+      await stageFiles(root, changed);
+
+      const fixedSnapshot = await exportPatch(root, ["--cached", "--binary"]);
+      await finalizeSuccessfulFix(root, fixedSnapshot, unstagedSnapshots);
+
+      return {
+        success: true,
+        fixesApplied: true,
+        skipped: false,
+        files,
+        stages,
+      } satisfies GitHookExecutionResult;
+    } catch (error) {
+      console.error("auto-fix failure", error);
       await restoreOriginalState(root, stagedSnapshot, unstagedSnapshots);
       return {
         success: false,
@@ -200,31 +228,43 @@ export const executeGitHook = async (
         stages,
       } satisfies GitHookExecutionResult;
     }
-
-    const changed = await collectFilesToStage(root, files);
-    await stageFiles(root, changed);
-
-    const fixedSnapshot = await exportPatch(root, ["--cached", "--binary"]);
-    await finalizeSuccessfulFix(root, fixedSnapshot, unstagedSnapshots);
-
-    return {
-      success: true,
-      fixesApplied: true,
-      skipped: false,
-      files,
-      stages,
-    } satisfies GitHookExecutionResult;
-  } catch (error) {
-    console.error("auto-fix failure", error);
-    await restoreOriginalState(root, stagedSnapshot, unstagedSnapshots);
-    return {
-      success: false,
-      fixesApplied: true,
-      skipped: false,
-      files,
-      stages,
-    } satisfies GitHookExecutionResult;
+  } finally {
+    cleanupGitArgsEnv();
   }
+};
+
+const applyGitArgsEnvironment = (
+  gitArgs: readonly string[] | undefined,
+): (() => void) => {
+  if (!gitArgs || gitArgs.length === 0) {
+    return () => {};
+  }
+
+  const previousGitArgs = process.env.QUALITY_HOOK_GIT_ARGS;
+  const previousRemoteName = process.env.QUALITY_HOOK_REMOTE_NAME;
+  const previousRemoteUrl = process.env.QUALITY_HOOK_REMOTE_URL;
+
+  process.env.QUALITY_HOOK_GIT_ARGS = JSON.stringify(gitArgs);
+  if (gitArgs[0] !== undefined) {
+    process.env.QUALITY_HOOK_REMOTE_NAME = gitArgs[0];
+  }
+  if (gitArgs[1] !== undefined) {
+    process.env.QUALITY_HOOK_REMOTE_URL = gitArgs[1];
+  }
+
+  return () => {
+    restoreEnv("QUALITY_HOOK_GIT_ARGS", previousGitArgs);
+    restoreEnv("QUALITY_HOOK_REMOTE_NAME", previousRemoteName);
+    restoreEnv("QUALITY_HOOK_REMOTE_URL", previousRemoteUrl);
+  };
+};
+
+const restoreEnv = (key: string, value: string | undefined): void => {
+  if (value === undefined) {
+    delete process.env[key];
+    return;
+  }
+  process.env[key] = value;
 };
 
 const collectHookFiles = async (

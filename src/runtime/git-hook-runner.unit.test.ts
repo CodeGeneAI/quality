@@ -101,6 +101,30 @@ const throwingAdapter: StageAdapter = {
   },
 };
 
+interface EnvCaptureSnapshot {
+  readonly gitArgs?: string;
+  readonly remoteName?: string;
+  readonly remoteUrl?: string;
+}
+
+const createEnvCaptureAdapter = (
+  capture: (snapshot: EnvCaptureSnapshot) => void,
+): StageAdapter => ({
+  type: "env-capture",
+  label: "Environment capture",
+  supportsModes: ["check"],
+  supportsSandbox: true,
+  supportsPartialFiles: true,
+  async run() {
+    capture({
+      gitArgs: process.env.QUALITY_HOOK_GIT_ARGS,
+      remoteName: process.env.QUALITY_HOOK_REMOTE_NAME,
+      remoteUrl: process.env.QUALITY_HOOK_REMOTE_URL,
+    });
+    return { status: "passed" };
+  },
+});
+
 const createStage = (
   overrides: Partial<ResolvedStage> = {},
 ): ResolvedStage => ({
@@ -738,5 +762,66 @@ describe("executeGitHook", () => {
     const secondaryContent = await Bun.file(secondaryPath).text();
     expect(secondaryContent).toContain("bad");
     expect(secondaryContent).toContain("workspace");
+  });
+
+  it("exposes git arguments through environment variables during execution", async () => {
+    const snapshots: EnvCaptureSnapshot[] = [];
+    const captureAdapter = createEnvCaptureAdapter((snapshot) => {
+      snapshots.push(snapshot);
+    });
+    registerAdapter(captureAdapter);
+    config = createConfig(root, [
+      createStage({ id: "env:capture", type: captureAdapter.type, files: ["sample.txt"] }),
+    ]);
+
+    const previousGitArgs = process.env.QUALITY_HOOK_GIT_ARGS;
+    const previousRemoteName = process.env.QUALITY_HOOK_REMOTE_NAME;
+    const previousRemoteUrl = process.env.QUALITY_HOOK_REMOTE_URL;
+
+    process.env.QUALITY_HOOK_GIT_ARGS = "baseline-args";
+    process.env.QUALITY_HOOK_REMOTE_NAME = "baseline-remote";
+    process.env.QUALITY_HOOK_REMOTE_URL = "baseline-url";
+
+    const gitArgs = ["origin", "git@example.com/repo.git", "refs/heads/main"];
+
+    try {
+      const result = await executeGitHook({
+        hookName: "pre-commit",
+        hook,
+        config,
+        gitArgs,
+      });
+
+      expect(result.success).toBe(true);
+      expect(snapshots).toEqual([
+        {
+          gitArgs: JSON.stringify(gitArgs),
+          remoteName: "origin",
+          remoteUrl: "git@example.com/repo.git",
+        },
+      ]);
+
+      expect(process.env.QUALITY_HOOK_GIT_ARGS).toBe("baseline-args");
+      expect(process.env.QUALITY_HOOK_REMOTE_NAME).toBe("baseline-remote");
+      expect(process.env.QUALITY_HOOK_REMOTE_URL).toBe("baseline-url");
+    } finally {
+      if (previousGitArgs === undefined) {
+        delete process.env.QUALITY_HOOK_GIT_ARGS;
+      } else {
+        process.env.QUALITY_HOOK_GIT_ARGS = previousGitArgs;
+      }
+
+      if (previousRemoteName === undefined) {
+        delete process.env.QUALITY_HOOK_REMOTE_NAME;
+      } else {
+        process.env.QUALITY_HOOK_REMOTE_NAME = previousRemoteName;
+      }
+
+      if (previousRemoteUrl === undefined) {
+        delete process.env.QUALITY_HOOK_REMOTE_URL;
+      } else {
+        process.env.QUALITY_HOOK_REMOTE_URL = previousRemoteUrl;
+      }
+    }
   });
 });
