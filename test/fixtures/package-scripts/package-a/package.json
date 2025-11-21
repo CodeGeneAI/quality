@@ -1,8 +1,0 @@
-{
-  "name": "package-a",
-  "version": "0.0.0",
-  "scripts": {
-    "build": "echo build",
-    "test": "echo test"
-  }
-}
