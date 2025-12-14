@@ -1,8 +1,3 @@
-<!-- doc-catalog:banner:start -->
-> [!NOTE]
-> This document participates in the Forge documentation catalog. See [documentation catalog](../../README.md#documentation-catalog) for cross-links and regeneration instructions.
-<!-- doc-catalog:banner:end -->
-
 # @codesynth-labs/quality
 
 Unified quality suite for the Forge Platform monorepo. This package provides the pipeline runner, adapters, schema, and CLI surface (`bun x quality …`). Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json` and `.qualityrc.jsonc` (JSON/JSONC only).
