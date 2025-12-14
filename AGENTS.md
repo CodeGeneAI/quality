@@ -1,6 +1,6 @@
 <!-- doc-catalog:banner:start -->
 > [!NOTE]
-> This document participates in the Forge documentation catalog. See [documentation catalog](../../README.md#documentation-catalog) for cross-links and regeneration instructions.
+> This document participates in the Platform documentation catalog. See [documentation catalog](../../README.md#documentation-catalog) for cross-links and regeneration instructions.
 <!-- doc-catalog:banner:end -->
 
 # Workspace guidance: `@codegeneai/quality`

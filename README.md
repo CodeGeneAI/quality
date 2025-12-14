@@ -1,6 +1,6 @@
 # @codegeneai/quality
 
-Unified quality suite for the Forge Platform monorepo. This package provides the pipeline runner, adapters, schema, and CLI surface (`bun x quality …`). Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json` and `.qualityrc.jsonc` (JSON/JSONC only).
+Unified quality suite for the Platform monorepo. This package provides the pipeline runner, adapters, schema, and CLI surface (`bun x quality …`). Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json` and `.qualityrc.jsonc` (JSON/JSONC only).
 
 ## Core concepts
 
@@ -99,7 +99,7 @@ quality check -a  # Explicitly enable auto-fix regardless of profile default
 - Set `ignore` at the root of `.qualityrc` to provide glob patterns that should
   be skipped by every stage. These patterns augment the built-in defaults
   (`node_modules`, `.git`, caches, etc.) and flow through adapter internals, so a
-  single entry such as `".forge/**"` keeps helper directories out of linting,
+  single entry such as `"scripts/helpers/**"` keeps helper directories out of linting,
   hooks, and stage-specific globbing.
 
 ### Built-in adapters
@@ -142,7 +142,7 @@ Example stage:
       "packages/*/*/*/package.json",
       "services/*/package.json",
       "apps/*/package.json",
-      "!packages/forge-stacks/stacks/**/package.json"
+      "!packages/platform-stacks/stacks/**/package.json"
     ],
     "allowlist": ["@codegeneai/*"]
   }

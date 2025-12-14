@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://forge.codegeneai.com/schemas/qualityrc.json",
+  "$id": "https://platform.codegeneai.com/schemas/qualityrc.json",
   "title": "CodeGeneAI Quality Configuration",
   "description": "Defines quality pipeline adapters, presets, profiles, reporters, and hooks for the monorepo.",
   "type": "object",
