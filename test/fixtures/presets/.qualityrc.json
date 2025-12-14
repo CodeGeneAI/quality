@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schemas/quality.schema.json",
+  "stages": {
+    "stub": {
+      "presets": {
+        "base": {
+          "options": { "flag": "base" }
+        },
+        "shared": {
+          "options": { "shared": true },
+          "continueOnError": true
+        },
+        "extended": {
+          "extends": ["base", "shared"],
+          "options": { "flag": "extended", "additional": true },
+          "group": { "id": "lint", "parallel": true, "failFast": false },
+          "description": "Extended lint preset"
+        }
+      }
+    }
+  },
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "stage:extended",
+          "type": "stub",
+          "preset": "extended",
+          "overrides": { "optionsOnly": true }
+        }
+      ],
+      "reporters": ["summary"]
+    }
+  }
+}

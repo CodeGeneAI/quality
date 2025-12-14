@@ -1,0 +1,882 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://forge.codesynthlabs.com/schemas/qualityrc.json",
+  "title": "Codesynth Quality Configuration",
+  "description": "Defines quality pipeline adapters, presets, profiles, reporters, and hooks for the monorepo.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional URL to the JSON schema definition for tooling and editors."
+    },
+    "shardDir": {
+      "type": "string",
+      "description": "Optional path (relative to the root config) where profile shard files (.qualityrc.<profile>.json/jsonc) are located. Defaults to the directory containing the base .qualityrc file."
+    },
+    "adapters": {
+      "type": "array",
+      "description": "Optional list of additional adapter modules to load (relative paths or module specifiers).",
+      "items": { "type": "string" }
+    },
+    "stages": {
+      "type": "object",
+      "description": "Adapter presets keyed by adapter type.",
+      "properties": {
+        "imports": { "$ref": "#/definitions/adapterPresetCatalogImports" },
+        "bun-native": { "$ref": "#/definitions/adapterPresetCatalogBunNative" },
+        "filenames": { "$ref": "#/definitions/adapterPresetCatalogFilenames" },
+        "structure": { "$ref": "#/definitions/adapterPresetCatalogStructure" },
+        "unit-adjacency": {
+          "$ref": "#/definitions/adapterPresetCatalogUnitAdjacency"
+        },
+        "command": { "$ref": "#/definitions/adapterPresetCatalogCommand" },
+        "package-scripts": {
+          "$ref": "#/definitions/adapterPresetCatalogPackageScripts"
+        },
+        "package-catalog": {
+          "$ref": "#/definitions/adapterPresetCatalogPackageCatalog"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/adapterPresetCatalogGeneric"
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Named profiles (e.g., local, ci) that specify pipeline order, reporters, and hooks.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "extends": {
+            "type": "string",
+            "description": "Name of another profile to inherit from."
+          },
+          "pipeline": {
+            "type": "array",
+            "description": "Ordered list of stages to execute for this profile.",
+            "items": { "$ref": "#/definitions/stage" }
+          },
+          "reporters": {
+            "type": "array",
+            "description": "Reporter definitions executed after the pipeline (e.g., summary, json, junit).",
+            "items": { "$ref": "#/definitions/reporterDefinition" }
+          },
+          "hooks": {
+            "$ref": "#/definitions/hooks",
+            "description": "Lifecycle hooks to run before/after the pipeline or on failures."
+          },
+          "filesMode": {
+            "type": "string",
+            "enum": ["staged", "workspace", "commits", "none"],
+            "description": "Optional file sourcing strategy for this profile (staged workspace snapshot, full workspace, or commit range)."
+          },
+          "parallelLimit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Caps concurrent stage execution within a parallel group. Defaults to the full group size; PROFILE value takes precedence over QUALITY_PARALLEL_LIMIT."
+          },
+          "autoFix": {
+            "type": "boolean",
+            "description": "When true, fixable stages run before verification without requiring --auto-fix; override per run with --no-auto-fix."
+          },
+          "pipelineStrategy": {
+            "type": "string",
+            "enum": ["append", "replace"],
+            "description": "Controls how pipelines combine when using 'extends'. 'append' (default) appends child stages after inherited stages; 'replace' discards inherited stages and uses the child pipeline only."
+          }
+        },
+        "allOf": [
+          {
+            "if": { "not": { "required": ["extends"] } },
+            "then": { "required": ["pipeline"] }
+          }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reporters": {
+      "type": "array",
+      "description": "Global reporters applied when a profile omits reporters.",
+      "items": { "$ref": "#/definitions/reporterDefinition" }
+    },
+    "hooks": {
+      "$ref": "#/definitions/hooks",
+      "description": "Global hooks merged into each profile."
+    },
+    "ignore": {
+      "type": "array",
+      "description": "Glob patterns ignored across every stage (combined with built-in defaults).",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [],
+  "additionalProperties": false,
+  "definitions": {
+    "reporterDefinition": {
+      "description": "Either the name of a reporter or a tuple [name, options].",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["summary", "json", "junit", "verbose"]
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": [
+            {
+              "type": "string",
+              "enum": ["summary", "json", "junit", "verbose"]
+            },
+            {
+              "type": "object",
+              "description": "Reporter-specific options (e.g., output paths).",
+              "additionalProperties": true
+            }
+          ]
+        }
+      ]
+    },
+    "hookCommand": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Shell command to execute for the hook."
+        },
+        {
+          "type": "object",
+          "description": "Structured hook definition allowing custom cwd/env and continueOnError toggles.",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "Shell command to execute."
+            },
+            "cwd": {
+              "type": "string",
+              "description": "Working directory for the command (defaults to repo root)."
+            },
+            "env": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "Additional environment variables for the command."
+            },
+            "continueOnError": {
+              "type": "boolean",
+              "description": "If true, pipeline continues even when the hook fails."
+            }
+          },
+          "required": ["command"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "onStart": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/hookCommand" },
+          "description": "Commands executed before any stage runs."
+        },
+        "onComplete": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/hookCommand" },
+          "description": "Commands executed after the pipeline finishes (success or failure)."
+        },
+        "onSuccess": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/hookCommand" },
+          "description": "Commands executed after all stages succeed."
+        },
+        "onStageFail": {
+          "type": "object",
+          "description": "Commands executed when stages fail (keyed by stage id or '*').",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/hookCommand" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "stageGroup": {
+      "description": "Stage grouping options controlling parallel execution.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "label": { "type": "string" },
+            "parallel": { "type": "boolean" },
+            "failFast": { "type": "boolean" },
+            "continueOnError": { "type": "boolean" }
+          },
+          "required": ["id"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "stagePresetBase": {
+      "type": "object",
+      "properties": {
+        "extends": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ],
+          "description": "Preset(s) to inherit from."
+        },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "mode": {
+          "type": "string",
+          "enum": ["check", "fix", "report"]
+        },
+        "alwaysRun": {
+          "type": "boolean",
+          "description": "If true, skips file aggregation and runs regardless of matched files. Inferred true when no files are specified."
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "group": { "$ref": "#/definitions/stageGroup" },
+        "output": { "$ref": "#/definitions/stageOutputOptions" },
+        "continueOnError": { "type": "boolean" },
+        "if": {
+          "type": "string",
+          "description": "Boolean condition evaluated by a sandboxed parser (env lookups, comparisons, logical operators)."
+        },
+        "reporters": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/reporterDefinition" }
+        },
+        "options": {
+          "type": "object",
+          "description": "Adapter-specific options.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "stagePreset": { "$ref": "#/definitions/stagePresetBase" },
+    "stagePresetImports": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsImports" }
+          }
+        }
+      ]
+    },
+    "stagePresetBunNative": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsBunNative" }
+          }
+        }
+      ]
+    },
+    "stagePresetFilenames": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsFilenames" }
+          }
+        }
+      ]
+    },
+    "stagePresetStructure": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsStructure" }
+          }
+        }
+      ]
+    },
+    "stagePresetUnitAdjacency": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsUnitAdjacency" }
+          }
+        }
+      ]
+    },
+    "stagePresetCommand": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsCommand" }
+          }
+        }
+      ]
+    },
+    "stagePresetPackageScripts": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsPackageScripts" }
+          }
+        }
+      ]
+    },
+    "stagePresetPackageCatalog": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsPackageCatalog" }
+          }
+        }
+      ]
+    },
+    "stageBase": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the stage."
+        },
+        "type": {
+          "type": "string",
+          "description": "Adapter type to execute (e.g., imports, command)."
+        },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "preset": { "type": "string" },
+        "mode": {
+          "type": "string",
+          "enum": ["check", "fix", "report"]
+        },
+        "alwaysRun": {
+          "type": "boolean",
+          "description": "If true, skips file aggregation and runs regardless of matched files. Inferred true when no files are specified."
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "group": { "$ref": "#/definitions/stageGroup" },
+        "output": { "$ref": "#/definitions/stageOutputOptions" },
+        "continueOnError": { "type": "boolean" },
+        "if": { "type": "string" },
+        "reporters": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/reporterDefinition" }
+        },
+        "overrides": {
+          "type": "object",
+          "description": "Adapter-specific option overrides.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "stage": {
+      "allOf": [
+        { "$ref": "#/definitions/stageBase" },
+        {
+          "type": "object",
+          "allOf": [
+            {
+              "if": { "properties": { "type": { "const": "imports" } } },
+              "then": {
+                "properties": {
+                  "overrides": { "$ref": "#/definitions/adapterOptionsImports" }
+                }
+              }
+            },
+            {
+              "if": { "properties": { "type": { "const": "bun-native" } } },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsBunNative"
+                  }
+                }
+              }
+            },
+            {
+              "if": { "properties": { "type": { "const": "filenames" } } },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsFilenames"
+                  }
+                }
+              }
+            },
+            {
+              "if": { "properties": { "type": { "const": "structure" } } },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsStructure"
+                  }
+                }
+              }
+            },
+            {
+              "if": { "properties": { "type": { "const": "command" } } },
+              "then": {
+                "properties": {
+                  "overrides": { "$ref": "#/definitions/adapterOptionsCommand" }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "package-scripts" } }
+              },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsPackageScripts"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "package-catalog" } }
+              },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsPackageCatalog"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "adapterPresetCatalogGeneric": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/stagePreset" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogImports": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/stagePresetImports" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogBunNative": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetBunNative"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogFilenames": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetFilenames"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogStructure": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetStructure"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogUnitAdjacency": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetUnitAdjacency"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogCommand": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/stagePresetCommand" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogPackageScripts": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetPackageScripts"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogPackageCatalog": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetPackageCatalog"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsImports": {
+      "type": "object",
+      "properties": {
+        "allowlist": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            ]
+          }
+        },
+        "verbose": { "type": "boolean" },
+        "severity": { "type": "string", "enum": ["error", "warn"] }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsBunNative": {
+      "type": "object",
+      "properties": {
+        "allowlist": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            ]
+          }
+        },
+        "allowedModules": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ignore": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "stripNodePrefix": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsFilenames": {
+      "type": "object",
+      "properties": {
+        "patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ignore": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "severity": { "type": "string", "enum": ["error", "warn"] },
+        "rename": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "match": { "type": "string" },
+              "replace": { "type": "string" }
+            },
+            "required": ["match", "replace"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "stageOutputOptions": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "enum": ["vitest", "playwright", "turbo"]
+        },
+        "mode": { "type": "string", "enum": ["passthrough", "errors-only"] },
+        "include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "trimLines": { "type": "boolean" },
+        "showOnSuccess": {
+          "type": "string",
+          "enum": ["none", "filtered", "raw"]
+        },
+        "showOnFailure": {
+          "type": "string",
+          "enum": ["none", "filtered", "raw"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsStructure": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["require", "disallow", "requireWithContent"]
+              },
+              "glob": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "paths": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "content": { "type": "string" },
+              "overwrite": { "type": "boolean" },
+              "perMatchGlob": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "perMatchKind": {
+                "type": "string",
+                "enum": ["directory", "file"]
+              },
+              "message": { "type": "string" }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        },
+        "severity": { "type": "string", "enum": ["error", "warn"] }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsUnitAdjacency": {
+      "type": "object",
+      "properties": {
+        "unitPatterns": {
+          "type": "array",
+          "description": "Glob patterns that identify unit test files (default: **/*.unit.spec.{ts,tsx,js,jsx,mts,mjs,cts,cjs}).",
+          "items": { "type": "string" }
+        },
+        "forbiddenSegments": {
+          "type": "array",
+          "description": "Path segments that unit tests may not live under (default: __tests__, test).",
+          "items": { "type": "string" }
+        },
+        "requireSubject": {
+          "type": "boolean",
+          "description": "When true (default), each unit test must have an adjacent subject file sharing the same stem.",
+          "default": true
+        },
+        "allowSubjectlessInTestsDir": {
+          "type": "boolean",
+          "description": "Allow unit tests without subjects when located under src/__tests__/ (configurable testsDirName) and when that directory only contains unit tests.",
+          "default": true
+        },
+        "testsDirName": {
+          "type": "string",
+          "description": "Name of the tests directory allowed for subject-less tests (default: __tests__).",
+          "default": "__tests__"
+        },
+        "ignore": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandEntry": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "command": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string" }
+                }
+              ]
+            },
+            "args": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "cwd": { "type": "string" },
+            "env": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "shell": {
+              "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+            },
+            "timeoutMs": { "type": "number", "minimum": 0 },
+            "continueOnError": { "type": "boolean" },
+            "label": { "type": "string" }
+          },
+          "required": ["command"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "adapterOptionsCommand": {
+      "type": "object",
+      "properties": {
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/commandEntry" }
+        },
+        "cwd": { "type": "string" },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "shell": {
+          "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+        },
+        "timeoutMs": { "type": "number", "minimum": 0 },
+        "abortPipelineOnFailure": { "type": "boolean" },
+        "output": { "$ref": "#/definitions/stageOutputOptions" }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsPackageScripts": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "requiredScripts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsPackageCatalog": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["dependencies", "devDependencies", "peerDependencies"]
+          }
+        },
+        "allowlist": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rootCatalogPath": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

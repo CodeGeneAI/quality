@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../schemas/quality.schema.json",
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "catalog",
+          "type": "package-catalog",
+          "overrides": {
+            "packages": ["packages/*/package.json"],
+            "sections": ["dependencies", "devDependencies", "peerDependencies"]
+          }
+        }
+      ]
+    }
+  }
+}

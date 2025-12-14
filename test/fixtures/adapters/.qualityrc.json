@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/quality.schema.json",
+  "adapters": ["./custom-adapter.ts"],
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "custom:example",
+          "type": "custom",
+          "preset": "default",
+          "overrides": { "message": "hello" }
+        }
+      ]
+    }
+  },
+  "stages": {
+    "custom": {
+      "presets": {
+        "default": {
+          "label": "Custom preset",
+          "description": "Runs the custom adapter",
+          "options": { "message": "default" },
+          "continueOnError": true
+        }
+      }
+    }
+  }
+}

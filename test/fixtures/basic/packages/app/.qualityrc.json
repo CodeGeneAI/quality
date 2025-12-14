@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../../../schemas/quality.schema.json",
+  "ignore": ["fixture-app-ignore/**"],
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "stub:override",
+          "type": "stub",
+          "label": "app override",
+          "overrides": { "shouldFail": true }
+        }
+      ]
+    }
+  }
+}

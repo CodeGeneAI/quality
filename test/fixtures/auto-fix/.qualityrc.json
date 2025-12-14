@@ -1,0 +1,9 @@
+{
+  "$schema": "./packages/quality/schemas/quality.schema.json",
+  "profiles": {
+    "local": {
+      "pipeline": [{ "id": "lint:imports", "type": "imports" }],
+      "autoFix": true
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../schemas/quality.schema.json",
+  "profiles": {
+    "default": {
+      "pipeline": [
+        { "id": "base", "type": "stub" },
+        { "id": "extra", "type": "stub" }
+      ]
+    },
+    "pre-commit": {
+      "extends": "default",
+      "pipelineStrategy": "replace",
+      "pipeline": [{ "id": "fast", "type": "stub" }]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "name": "@codesynth-labs/quality",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "Quality tooling (lint, format, hooks) for monorepo workflows",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeSynth-Labs/forge-platform.git",
+    "directory": "packages/quality"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/cli/index.ts",
+    "./schemas/qualityrc.schema.json": "./schemas/qualityrc.schema.json",
+    "./schemas/quality.schema.json": "./schemas/quality.schema.json"
+  },
+  "bin": {
+    "quality": "./src/bin.ts"
+  },
+  "files": [
+    "src",
+    "schemas",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "scripts": {
+    "lint": "biome check --write --diagnostic-level=error",
+    "typecheck": "bun --bun tsc --noEmit",
+    "test:unit": "bun --bun vitest run --config vitest.unit.config.ts",
+    "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
+  },
+  "dependencies": {
+    "clipanion": "catalog:cli",
+    "diff-match-patch": "catalog:tooling",
+    "fast-glob": "catalog:tooling",
+    "jsonc-parser": "catalog:tooling",
+    "kleur": "catalog:tooling",
+    "micromatch": "catalog:tooling",
+    "zod": "catalog:validation"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:tooling",
+    "@codesynth-labs/typescript-config": "workspace:*",
+    "@types/bun": "catalog:tooling",
+    "@types/diff-match-patch": "catalog:tooling",
+    "@types/micromatch": "catalog:tooling",
+    "typescript": "catalog:tooling",
+    "vitest": "catalog:testing"
+  }
+}
