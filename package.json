@@ -1,12 +1,12 @@
 {
-  "name": "@codesynth-labs/quality",
+  "name": "@codegeneai/quality",
   "version": "2.0.2",
   "type": "module",
   "description": "Quality tooling (lint, format, hooks) for monorepo workflows",
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/CodeSynth-Labs/forge-platform.git",
+    "url": "https://github.com/CodeGeneAI/platform.git",
     "directory": "packages/quality"
   },
   "publishConfig": {
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:tooling",
-    "@codesynth-labs/typescript-config": "workspace:*",
+    "@codegeneai/typescript-config": "workspace:*",
     "@types/bun": "catalog:tooling",
     "@types/diff-match-patch": "catalog:tooling",
     "@types/micromatch": "catalog:tooling",

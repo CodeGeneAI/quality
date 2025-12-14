@@ -1,4 +1,4 @@
-# @codesynth-labs/quality
+# @codegeneai/quality
 
 Unified quality suite for the Forge Platform monorepo. This package provides the pipeline runner, adapters, schema, and CLI surface (`bun x quality …`). Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json` and `.qualityrc.jsonc` (JSON/JSONC only).
 
@@ -144,7 +144,7 @@ Example stage:
       "apps/*/package.json",
       "!packages/forge-stacks/stacks/**/package.json"
     ],
-    "allowlist": ["@codesynth-labs/*"]
+    "allowlist": ["@codegeneai/*"]
   }
 }
 ```
@@ -260,7 +260,7 @@ Add custom adapters by exporting modules that return a `StageAdapter`:
 
 ```ts
 // packages/tools/quality/custom-adapter.ts
-import type { StageAdapter } from "@codesynth-labs/quality";
+import type { StageAdapter } from "@codegeneai/quality";
 
 export const greetAdapter: StageAdapter<{ message?: string }> = {
   type: "greet",
@@ -342,10 +342,10 @@ Adapters declared in nested configs are registered automatically.
 
 ## Development
 
-- Type check: `bun --filter @codesynth-labs/quality typecheck`
-- Lint: `bun --filter @codesynth-labs/quality lint`
-- Unit tests: `bun --filter @codesynth-labs/quality test:unit`
-- Avoid `bun test`; it runs an unintended scope. Always execute `bun run test:unit` (or `bun --filter @codesynth-labs/quality test:unit`) for reliable results.
+- Type check: `bun --filter @codegeneai/quality typecheck`
+- Lint: `bun --filter @codegeneai/quality lint`
+- Unit tests: `bun --filter @codegeneai/quality test:unit`
+- Avoid `bun test`; it runs an unintended scope. Always execute `bun run test:unit` (or `bun --filter @codegeneai/quality test:unit`) for reliable results.
 
 Tests live alongside the source (e.g., `src/pipeline/runner.unit.test.ts`). Fixtures under `test/fixtures/**` exercise loader behaviours, preset inheritance, and schema validation.
 

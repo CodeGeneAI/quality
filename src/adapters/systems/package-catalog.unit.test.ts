@@ -125,7 +125,7 @@ describe("package-catalog adapter", () => {
     await writeJson(join(root, "pkg", "package.json"), {
       name: "pkg",
       version: "0.0.0",
-      dependencies: { "@codesynth-labs/foo": "workspace:*" },
+      dependencies: { "@codegeneai/foo": "workspace:*" },
     });
 
     const result = await packageCatalogAdapter.run({
@@ -137,13 +137,13 @@ describe("package-catalog adapter", () => {
         type: "package-catalog",
         options: {
           packages: ["pkg/package.json"],
-          allowlist: ["@codesynth-labs/*"],
+          allowlist: ["@codegeneai/*"],
         },
       } as any,
       files: [],
       options: {
         packages: ["pkg/package.json"],
-        allowlist: ["@codesynth-labs/*"],
+        allowlist: ["@codegeneai/*"],
       },
       ignore: [],
       abortSignal: new AbortController().signal,

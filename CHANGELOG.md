@@ -1,10 +1,10 @@
-# @codesynth-labs/quality
+# @codegeneai/quality
 
 ## 2.0.2
 
 ### Patch Changes
 
-- [#119](https://github.com/CodeSynth-Labs/forge-platform/pull/119) [`2454b6f`](https://github.com/CodeSynth-Labs/forge-platform/commit/2454b6f74ff023d750111cb0813bb0691f719168) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Remove all forge CLI and forge-suite documentation references
+- [#119](https://github.com/CodeGeneAI/platform/pull/119) [`2454b6f`](https://github.com/CodeGeneAI/platform/commit/2454b6f74ff023d750111cb0813bb0691f719168) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Remove all forge CLI and forge-suite documentation references
 
   ## Documentation Cleanup
 
@@ -26,14 +26,14 @@
 
 ### Patch Changes
 
-- [#115](https://github.com/CodeSynth-Labs/forge-platform/pull/115) [`0452393`](https://github.com/CodeSynth-Labs/forge-platform/commit/04523932db8b0a7c99110035c2d486e09fbf7438) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Ensure the quality CLI command tests stub the local index exports so the CLI paths run against the mocked helpers and avoid executing the real pipeline.
+- [#115](https://github.com/CodeGeneAI/platform/pull/115) [`0452393`](https://github.com/CodeGeneAI/platform/commit/04523932db8b0a7c99110035c2d486e09fbf7438) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Ensure the quality CLI command tests stub the local index exports so the CLI paths run against the mocked helpers and avoid executing the real pipeline.
 
 ## 2.0.0
 
 ### Major Changes
 
-- [#48](https://github.com/CodeSynth-Labs/forge-platform/pull/48) [`ff1efda`](https://github.com/CodeSynth-Labs/forge-platform/commit/ff1efda84a995a047e0a09858cf17a5951182390) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Centralize CLI entrypoints under `@codesynth-labs/forge`, remove package-level binaries, and fold the old `forge-types`/`forge-utils` surfaces into `forge-core` (schema, loaders, dependency graph). All other forge-suite packages now export SDKs only.
+- [#48](https://github.com/CodeGeneAI/platform/pull/48) [`ff1efda`](https://github.com/CodeGeneAI/platform/commit/ff1efda84a995a047e0a09858cf17a5951182390) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Centralize CLI entrypoints under `@codegeneai/forge`, remove package-level binaries, and fold the old `forge-types`/`forge-utils` surfaces into `forge-core` (schema, loaders, dependency graph). All other forge-suite packages now export SDKs only.
 
 ### Patch Changes
 
-- [#53](https://github.com/CodeSynth-Labs/forge-platform/pull/53) [`3b7b3ad`](https://github.com/CodeSynth-Labs/forge-platform/commit/3b7b3adc50414be256f5ace62d122314552aa49f) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Improve auto-fix defaults and CLI ergonomics by documenting resolution order, tightening validation, and adding defensive feedback and tests.
+- [#53](https://github.com/CodeGeneAI/platform/pull/53) [`3b7b3ad`](https://github.com/CodeGeneAI/platform/commit/3b7b3adc50414be256f5ace62d122314552aa49f) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Improve auto-fix defaults and CLI ergonomics by documenting resolution order, tightening validation, and adding defensive feedback and tests.

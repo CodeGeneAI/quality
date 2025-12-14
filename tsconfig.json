@@ -1,5 +1,5 @@
 {
-  "extends": "@codesynth-labs/typescript-config/base",
+  "extends": "@codegeneai/typescript-config/base",
   "compilerOptions": {
     "target": "ESNext",
     "module": "esnext",

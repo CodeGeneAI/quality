@@ -3,7 +3,7 @@
 > This document participates in the Forge documentation catalog. See [documentation catalog](../../README.md#documentation-catalog) for cross-links and regeneration instructions.
 <!-- doc-catalog:banner:end -->
 
-# Workspace guidance: `@codesynth-labs/quality`
+# Workspace guidance: `@codegeneai/quality`
 
 ## Mission
 Deliver a single declarative quality pipeline for the monorepo: composable stage adapters, rich schema tooling, and local/CI parity. The CLI now ships with this package directly (`quality …` via `bun x quality`).
@@ -31,7 +31,7 @@ Deliver a single declarative quality pipeline for the monorepo: composable stage
 - Telemetry toggles: `--telemetry stdout|file`, `--telemetry-file <path>`, and `--debug` populate `QUALITY_TELEMETRY*` env vars for JSON diagnostics.
 
 ## Tests & quality gates
-- Run `bun --filter @codesynth-labs/quality lint`, `bun --filter @codesynth-labs/quality typecheck`, and `bun --filter @codesynth-labs/quality test:unit` before committing.
+- Run `bun --filter @codegeneai/quality lint`, `bun --filter @codegeneai/quality typecheck`, and `bun --filter @codegeneai/quality test:unit` before committing.
 - Do **not** use `bun test`; it executes the wrong scope and yields unreliable results. Always run `bun run test:unit` (or `bun --filter … test:unit`) inside the package you want to verify.
 - Unit tests cover the loader, pipeline semantics (parallel fail-fast vs continue), command adapter behaviours (timeouts, aborts, shell), schema validation, and fixtures. CLI paths are exercised directly in this package.
 - Integration matrix:
