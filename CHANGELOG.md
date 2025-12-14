@@ -1,5 +1,11 @@
 # @codesynth-labs/quality
 
+## 2.0.1
+
+### Patch Changes
+
+- [#115](https://github.com/CodeSynth-Labs/forge-platform/pull/115) [`0452393`](https://github.com/CodeSynth-Labs/forge-platform/commit/04523932db8b0a7c99110035c2d486e09fbf7438) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Ensure the quality CLI command tests stub the local index exports so the CLI paths run against the mocked helpers and avoid executing the real pipeline.
+
 ## 2.0.0
 
 ### Major Changes

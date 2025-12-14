@@ -1,6 +1,6 @@
 {
   "name": "@codesynth-labs/quality",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "description": "Quality tooling (lint, format, hooks) for monorepo workflows",
   "sideEffects": false,
