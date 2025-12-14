@@ -1,5 +1,11 @@
 # @codegeneai/quality
 
+## 2.0.3
+
+### Patch Changes
+
+- [#121](https://github.com/CodeGeneAI/platform/pull/121) [`ec000d3`](https://github.com/CodeGeneAI/platform/commit/ec000d3dfa46c3dc3ab1987d0c948a00aac275bc) Thanks [@rszemplinski](https://github.com/rszemplinski)! - refactor: document @codegeneai scope migration and remove committed npm auth token
+
 ## 2.0.2
 
 ### Patch Changes
