@@ -1,5 +1,11 @@
 # @codegeneai/quality
 
+## 2.0.4
+
+### Patch Changes
+
+- [`e28b2ec`](https://github.com/CodeGeneAI/platform/commit/e28b2ec1faec8cfdcb4d4895b9e92f58a62d4ee6) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Test changeset to validate release workflow automation.
+
 ## 2.0.3
 
 ### Patch Changes

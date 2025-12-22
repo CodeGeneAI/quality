@@ -1,4 +1,5 @@
 import fg from "fast-glob";
+import { realpath } from "fs/promises";
 import { parse } from "jsonc-parser";
 import { ensureHooks } from "../pipeline/hooks";
 import { ensureReporterDefinitions } from "../reporters/registry";
@@ -57,6 +58,14 @@ const discoverShardProfiles = async (
     if (match?.[1]) profiles.add(match[1]);
   }
   return profiles;
+};
+
+const resolveExistingPath = async (value: string): Promise<string> => {
+  try {
+    return await realpath(value);
+  } catch {
+    return value;
+  }
 };
 
 interface LoadedConfig {
@@ -572,10 +581,11 @@ const loadOverridesForTargets = async (
   targetPaths: readonly string[],
 ): Promise<(LoadedConfig | undefined)[]> => {
   const directories = new Set<string>();
+  const normalizedRoot = await resolveExistingPath(root);
   for (const path of targetPaths) {
-    const absolute = resolvePath(path);
+    const absolute = await resolveExistingPath(resolvePath(path));
     let current = absolute;
-    while (current.startsWith(root)) {
+    while (current.startsWith(normalizedRoot)) {
       directories.add(current);
       const parent = dirname(current);
       if (parent === current) break;
@@ -584,7 +594,7 @@ const loadOverridesForTargets = async (
   }
 
   const depthFromRoot = (value: string): number => {
-    const relative = relativePath(root, value);
+    const relative = relativePath(normalizedRoot, value);
     if (!relative || relative === ".") {
       return 0;
     }
@@ -592,7 +602,7 @@ const loadOverridesForTargets = async (
   };
 
   const orderedDirectories = Array.from(directories)
-    .filter((directory) => directory !== root)
+    .filter((directory) => directory !== normalizedRoot)
     .sort((left, right) => {
       const depthDelta = depthFromRoot(left) - depthFromRoot(right);
       if (depthDelta !== 0) {
