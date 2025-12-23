@@ -1,4 +1,6 @@
 import { registerAdapters } from "./registry";
+import { barrelExportsAdapter } from "./systems/barrel-exports";
+import { biomeConfigAdapter } from "./systems/biome-config";
 import { bunNativeAdapter } from "./systems/bun-native";
 import { commandAdapter } from "./systems/command";
 import { filenameAdapter } from "./systems/filenames";
@@ -12,6 +14,8 @@ export const registerBuiltInAdapters = (): void => {
   registerAdapters([
     importExtensionsAdapter,
     bunNativeAdapter,
+    barrelExportsAdapter,
+    biomeConfigAdapter,
     filenameAdapter,
     structureAdapter,
     unitAdjacencyAdapter,

@@ -1,5 +1,17 @@
 # @codegeneai/quality
 
+## 2.1.0
+
+### Minor Changes
+
+- [#232](https://github.com/CodeGeneAI/platform/pull/232) [`e6d6fcc`](https://github.com/CodeGeneAI/platform/commit/e6d6fcc2fae7ebe30217a5348073c95bcb911168) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Add biome-config and barrel-exports quality adapters
+
+  - **biome-config adapter**: Enforces `useImportType: "off"` in biome.json for services and NestJS integrations. Features Zod schema validation, custom error classes for proper error handling, and comprehensive test coverage.
+
+  - **barrel-exports adapter**: Prevents barrel exports in client packages (those with react/react-dom peer dependencies) to ensure proper tree-shaking. Supports ignore patterns for specific packages.
+
+  Both adapters include fix mode support and detailed error messages.
+
 ## 2.0.4
 
 ### Patch Changes

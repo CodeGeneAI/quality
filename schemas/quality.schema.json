@@ -26,6 +26,9 @@
         "bun-native": { "$ref": "#/definitions/adapterPresetCatalogBunNative" },
         "filenames": { "$ref": "#/definitions/adapterPresetCatalogFilenames" },
         "structure": { "$ref": "#/definitions/adapterPresetCatalogStructure" },
+        "biome-config": {
+          "$ref": "#/definitions/adapterPresetCatalogBiomeConfig"
+        },
         "unit-adjacency": {
           "$ref": "#/definitions/adapterPresetCatalogUnitAdjacency"
         },
@@ -35,6 +38,9 @@
         },
         "package-catalog": {
           "$ref": "#/definitions/adapterPresetCatalogPackageCatalog"
+        },
+        "barrel-exports": {
+          "$ref": "#/definitions/adapterPresetCatalogBarrelExports"
         }
       },
       "additionalProperties": {
@@ -310,6 +316,17 @@
         }
       ]
     },
+    "stagePresetBiomeConfig": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsBiomeConfig" }
+          }
+        }
+      ]
+    },
     "stagePresetUnitAdjacency": {
       "allOf": [
         { "$ref": "#/definitions/stagePresetBase" },
@@ -350,6 +367,17 @@
           "type": "object",
           "properties": {
             "options": { "$ref": "#/definitions/adapterOptionsPackageCatalog" }
+          }
+        }
+      ]
+    },
+    "stagePresetBarrelExports": {
+      "allOf": [
+        { "$ref": "#/definitions/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": { "$ref": "#/definitions/adapterOptionsBarrelExports" }
           }
         }
       ]
@@ -442,6 +470,16 @@
               }
             },
             {
+              "if": { "properties": { "type": { "const": "biome-config" } } },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsBiomeConfig"
+                  }
+                }
+              }
+            },
+            {
               "if": { "properties": { "type": { "const": "command" } } },
               "then": {
                 "properties": {
@@ -469,6 +507,18 @@
                 "properties": {
                   "overrides": {
                     "$ref": "#/definitions/adapterOptionsPackageCatalog"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "barrel-exports" } }
+              },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/definitions/adapterOptionsBarrelExports"
                   }
                 }
               }
@@ -533,6 +583,18 @@
       },
       "additionalProperties": false
     },
+    "adapterPresetCatalogBiomeConfig": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetBiomeConfig"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "adapterPresetCatalogUnitAdjacency": {
       "type": "object",
       "properties": {
@@ -574,6 +636,18 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/stagePresetPackageCatalog"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogBarrelExports": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/stagePresetBarrelExports"
           }
         }
       },
@@ -740,6 +814,23 @@
       },
       "additionalProperties": false
     },
+    "adapterOptionsBiomeConfig": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "biomeFile": { "type": "string" },
+        "expectedUseImportType": { "type": "string" },
+        "template": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "severity": { "type": "string", "enum": ["error", "warn"] }
+      },
+      "additionalProperties": false
+    },
     "adapterOptionsUnitAdjacency": {
       "type": "object",
       "properties": {
@@ -875,6 +966,28 @@
           "items": { "type": "string" }
         },
         "rootCatalogPath": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsBarrelExports": {
+      "type": "object",
+      "description": "Options for the barrel-exports adapter that prevents barrel exports in client packages.",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "description": "Glob patterns for package.json files to check.",
+          "items": { "type": "string" }
+        },
+        "clientPackageIndicators": {
+          "type": "array",
+          "description": "Package names in peerDependencies that identify client packages (default: react, react-dom).",
+          "items": { "type": "string" }
+        },
+        "ignore": {
+          "type": "array",
+          "description": "Package names or glob patterns to ignore. Matches against the package name from package.json.",
+          "items": { "type": "string" }
+        }
       },
       "additionalProperties": false
     }
