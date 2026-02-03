@@ -6,5 +6,8 @@
       "axios": "1.0.0",
       "lodash": "4.17.21"
     }
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   }
 }

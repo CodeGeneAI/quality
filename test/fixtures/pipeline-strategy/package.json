@@ -1,3 +1,6 @@
 {
-  "name": "quality-fixture-pipeline-strategy"
+  "name": "quality-fixture-pipeline-strategy",
+  "scripts": {
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
+  }
 }

@@ -2,6 +2,7 @@
   "name": "package-b",
   "version": "0.0.0",
   "scripts": {
-    "build": "echo build"
+    "build": "echo build",
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   }
 }
