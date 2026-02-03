@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "build": "echo build",
-    "test": "echo test"
+    "test": "echo test",
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   }
 }
