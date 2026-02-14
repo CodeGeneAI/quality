@@ -1,5 +1,11 @@
 # @codegeneai/quality
 
+## 2.1.1
+
+### Patch Changes
+
+- [#523](https://github.com/CodeGeneAI/platform/pull/523) [`6065b06`](https://github.com/CodeGeneAI/platform/commit/6065b06c968178d5ac942e6a9ef5378dc4973b49) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Harden module audit tooling with safer path handling, bounded file scanning, and added unit tests.
+
 ## 2.1.0
 
 ### Minor Changes
