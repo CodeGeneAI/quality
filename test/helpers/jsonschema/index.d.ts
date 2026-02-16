@@ -1,5 +1,5 @@
 /*
-This is type definition for typescript.
+This is type spec for typescript.
 This is for library users. Thus, properties and methods for internal use is omitted.
  */
 export declare class Validator {
@@ -93,7 +93,7 @@ export interface Schema {
   minProperties?: number;
   required?: string[] | boolean;
   additionalProperties?: boolean | Schema;
-  definitions?: {
+  specs?: {
     [name: string]: Schema;
   };
   properties?: {

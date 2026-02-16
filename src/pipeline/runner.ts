@@ -8,7 +8,7 @@ import type { QualityMode, ResolvedStage } from "../config/types";
 import { runReporters } from "../reporters";
 import type {
   PipelineResult,
-  ReporterDefinition,
+  ReporterSpec,
   StageResultSummary,
   StageStatus,
 } from "../reporters/types";
@@ -79,7 +79,7 @@ export interface PipelineRunOptions {
   readonly mode: QualityMode;
   readonly files: readonly string[];
   readonly config: ResolvedConfig;
-  readonly reporterDefinitions: readonly ReporterDefinition[];
+  readonly reporterSpecs: readonly ReporterSpec[];
   readonly stages?: readonly ResolvedStage[];
   readonly dryRun?: boolean;
   readonly telemetry?: {
@@ -220,11 +220,7 @@ export const runPipeline = async (
       success: true,
     } satisfies PipelineResult;
 
-    await runReporters(
-      pipelineResult,
-      options.reporterDefinitions,
-      config.root,
-    );
+    await runReporters(pipelineResult, options.reporterSpecs, config.root);
     return pipelineResult;
   }
 
@@ -352,7 +348,7 @@ export const runPipeline = async (
     });
   }
 
-  await runReporters(pipelineResult, options.reporterDefinitions, config.root);
+  await runReporters(pipelineResult, options.reporterSpecs, config.root);
 
   debugLog(
     "pipeline",

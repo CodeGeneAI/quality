@@ -2,8 +2,8 @@ import fg from "fast-glob";
 import { realpath } from "fs/promises";
 import { parse } from "jsonc-parser";
 import { ensureHooks } from "../pipeline/hooks";
-import { ensureReporterDefinitions } from "../reporters/registry";
-import type { ReporterDefinition } from "../reporters/types";
+import { ensureReporterSpecs } from "../reporters/registry";
+import type { ReporterSpec } from "../reporters/types";
 import { pathExists, readTextFile } from "../utils/fs";
 import { mergeDeep } from "../utils/merge";
 import { dirname, joinPaths, relativePath, resolvePath } from "../utils/path";
@@ -13,7 +13,7 @@ import type {
   QualityConfig,
   QualityHooksConfig,
   QualityProfileConfig,
-  QualityStageDefinition,
+  QualityStageSpec,
   ResolvedQualityProfile,
   ResolvedStage,
   ResolvedStageGroup,
@@ -21,7 +21,7 @@ import type {
   StageCatalogConfig,
   StageGroupConfig,
   StageGroupReference,
-  StagePresetDefinition,
+  StagePresetSpec,
 } from "./types";
 
 const CONFIG_FILENAMES = [".qualityrc.json", ".qualityrc.jsonc", ".qualityrc"];
@@ -186,7 +186,7 @@ export const loadQualityConfig = async (
   }
 
   const ignore = Array.from(ignorePatterns);
-  const reporters = ensureReporterDefinitions(
+  const reporters = ensureReporterSpecs(
     mergedProfile.reporters ?? rootReporters ?? ["summary"],
   );
 
@@ -263,8 +263,8 @@ const buildProfileChain = async (
 const mergeProfiles = (
   chain: readonly QualityProfileConfig[],
 ): QualityProfileConfig => {
-  let pipeline: QualityStageDefinition[] = [];
-  let reporters: readonly ReporterDefinition[] | undefined;
+  let pipeline: QualityStageSpec[] = [];
+  let reporters: readonly ReporterSpec[] | undefined;
   let hooks: QualityHooksConfig | undefined;
   let filesMode: FilesMode | undefined;
   let parallelLimit: number | undefined;
@@ -367,27 +367,27 @@ const mergeCatalogEntry = (
 };
 
 const mergePresetMap = (
-  base: Record<string, StagePresetDefinition>,
-  next: Record<string, StagePresetDefinition>,
-): Record<string, StagePresetDefinition> => {
-  const result: Record<string, StagePresetDefinition> = {
+  base: Record<string, StagePresetSpec>,
+  next: Record<string, StagePresetSpec>,
+): Record<string, StagePresetSpec> => {
+  const result: Record<string, StagePresetSpec> = {
     ...clonePresetMap(base),
   };
   for (const [presetName, preset] of Object.entries(next)) {
     const existing = result[presetName];
     if (!existing) {
-      result[presetName] = { ...preset } satisfies StagePresetDefinition;
+      result[presetName] = { ...preset } satisfies StagePresetSpec;
       continue;
     }
-    result[presetName] = mergePresetDefinition(existing, preset);
+    result[presetName] = mergePresetSpec(existing, preset);
   }
   return result;
 };
 
-const mergePresetDefinition = (
-  base: StagePresetDefinition,
-  next: StagePresetDefinition,
-): StagePresetDefinition => ({
+const mergePresetSpec = (
+  base: StagePresetSpec,
+  next: StagePresetSpec,
+): StagePresetSpec => ({
   extends: next.extends ?? base.extends,
   label: next.label ?? base.label,
   description: next.description ?? base.description,
@@ -401,12 +401,12 @@ const mergePresetDefinition = (
 });
 
 const resolvePipelineStages = (
-  pipeline: readonly QualityStageDefinition[],
+  pipeline: readonly QualityStageSpec[],
   catalog: StageCatalogConfig,
 ): ResolvedStage[] => pipeline.map((stage) => resolveStage(stage, catalog));
 
 const resolveStage = (
-  stage: QualityStageDefinition,
+  stage: QualityStageSpec,
   catalog: StageCatalogConfig,
 ): ResolvedStage => {
   if ("filesMode" in (stage as unknown as Record<string, unknown>)) {
@@ -445,10 +445,8 @@ const resolveStage = (
 };
 
 const resolveContinueOnError = (
-  stage: QualityStageDefinition,
-  preset:
-    | (StagePresetDefinition & { options?: Record<string, unknown> })
-    | undefined,
+  stage: QualityStageSpec,
+  preset: (StagePresetSpec & { options?: Record<string, unknown> }) | undefined,
   group: ResolvedStageGroup | undefined,
   options: Record<string, unknown>,
 ): boolean => {
@@ -500,7 +498,7 @@ const resolvePreset = (
   presetName: string,
   catalog: StageCatalogConfig,
   stack: string[] = [],
-): StagePresetDefinition => {
+): StagePresetSpec => {
   if (stack.includes(presetName)) {
     throw new Error(
       `Circular preset inheritance detected for '${adapterType}:${presetName}'.`,
@@ -521,19 +519,17 @@ const resolvePreset = (
     resolvePreset(adapterType, parent, catalog, [...stack, presetName]),
   );
   const parentAggregate = resolvedParents.reduce(
-    (acc, parent) => mergePresetDefinition(acc, parent),
+    (acc, parent) => mergePresetSpec(acc, parent),
     createEmptyPreset(),
   );
-  return mergePresetDefinition(parentAggregate, preset);
+  return mergePresetSpec(parentAggregate, preset);
 };
 
-const createEmptyPreset = (): StagePresetDefinition => ({
+const createEmptyPreset = (): StagePresetSpec => ({
   options: {},
 });
 
-const normalizeExtends = (
-  value: StagePresetDefinition["extends"],
-): string[] => {
+const normalizeExtends = (value: StagePresetSpec["extends"]): string[] => {
   if (!value) return [];
   if (Array.isArray(value)) {
     return [...(value as readonly string[])];
@@ -557,9 +553,9 @@ const cloneCatalogEntry = (
 });
 
 const clonePresetMap = (
-  presets: Record<string, StagePresetDefinition>,
-): Record<string, StagePresetDefinition> => {
-  const result: Record<string, StagePresetDefinition> = {};
+  presets: Record<string, StagePresetSpec>,
+): Record<string, StagePresetSpec> => {
+  const result: Record<string, StagePresetSpec> = {};
   for (const [name, preset] of Object.entries(presets)) {
     result[name] = { ...preset };
   }

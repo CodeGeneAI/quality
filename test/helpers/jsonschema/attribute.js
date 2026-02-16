@@ -350,7 +350,7 @@ validators.properties = function validateProperties(
 
 /**
  * Test a specific property within in instance against the additionalProperties schema attribute
- * This ignores properties with definitions in the properties schema attribute, but no other attributes.
+ * This ignores properties with specs in the properties schema attribute, but no other attributes.
  * If too many more types of property-existence tests pop up they may need their own class of tests (like `type` has)
  * @private
  * @return {boolean}

@@ -1,4 +1,4 @@
-import type { HookDefinition, QualityHooksConfig } from "../config/types";
+import type { HookSpec, QualityHooksConfig } from "../config/types";
 import { runCommand } from "../utils/process";
 
 export interface RunHooksOptions {
@@ -73,7 +73,7 @@ export const runStageFailureHooks = async (
 };
 
 const normalizeHooks = (
-  hooks: readonly HookDefinition[] | undefined,
+  hooks: readonly HookSpec[] | undefined,
 ): readonly ResolvedHook[] => {
   if (!hooks) return [];
   return hooks.map((hook) =>
@@ -82,7 +82,7 @@ const normalizeHooks = (
 };
 
 const normalizeStageHooks = (
-  hooks: Record<string, readonly HookDefinition[]> | undefined,
+  hooks: Record<string, readonly HookSpec[]> | undefined,
 ): Record<string, readonly ResolvedHook[]> => {
   if (!hooks) return {};
   const entries = Object.entries(hooks).map(

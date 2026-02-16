@@ -7,7 +7,7 @@
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "Optional URL to the JSON schema definition for tooling and editors."
+      "description": "Optional URL to the JSON schema spec for tooling and editors."
     },
     "shardDir": {
       "type": "string",
@@ -22,23 +22,23 @@
       "type": "object",
       "description": "Adapter presets keyed by adapter type.",
       "properties": {
-        "imports": { "$ref": "#/definitions/adapterPresetCatalogImports" },
-        "bun-native": { "$ref": "#/definitions/adapterPresetCatalogBunNative" },
-        "filenames": { "$ref": "#/definitions/adapterPresetCatalogFilenames" },
-        "structure": { "$ref": "#/definitions/adapterPresetCatalogStructure" },
+        "imports": { "$ref": "#/specs/adapterPresetCatalogImports" },
+        "bun-native": { "$ref": "#/specs/adapterPresetCatalogBunNative" },
+        "filenames": { "$ref": "#/specs/adapterPresetCatalogFilenames" },
+        "structure": { "$ref": "#/specs/adapterPresetCatalogStructure" },
         "unit-adjacency": {
-          "$ref": "#/definitions/adapterPresetCatalogUnitAdjacency"
+          "$ref": "#/specs/adapterPresetCatalogUnitAdjacency"
         },
-        "command": { "$ref": "#/definitions/adapterPresetCatalogCommand" },
+        "command": { "$ref": "#/specs/adapterPresetCatalogCommand" },
         "package-scripts": {
-          "$ref": "#/definitions/adapterPresetCatalogPackageScripts"
+          "$ref": "#/specs/adapterPresetCatalogPackageScripts"
         },
         "package-catalog": {
-          "$ref": "#/definitions/adapterPresetCatalogPackageCatalog"
+          "$ref": "#/specs/adapterPresetCatalogPackageCatalog"
         }
       },
       "additionalProperties": {
-        "$ref": "#/definitions/adapterPresetCatalogGeneric"
+        "$ref": "#/specs/adapterPresetCatalogGeneric"
       }
     },
     "profiles": {
@@ -54,15 +54,15 @@
           "pipeline": {
             "type": "array",
             "description": "Ordered list of stages to execute for this profile.",
-            "items": { "$ref": "#/definitions/stage" }
+            "items": { "$ref": "#/specs/stage" }
           },
           "reporters": {
             "type": "array",
-            "description": "Reporter definitions executed after the pipeline (e.g., summary, json, junit).",
-            "items": { "$ref": "#/definitions/reporterDefinition" }
+            "description": "Reporter specs executed after the pipeline (e.g., summary, json, junit).",
+            "items": { "$ref": "#/specs/reporterSpec" }
           },
           "hooks": {
-            "$ref": "#/definitions/hooks",
+            "$ref": "#/specs/hooks",
             "description": "Lifecycle hooks to run before/after the pipeline or on failures."
           },
           "filesMode": {
@@ -97,10 +97,10 @@
     "reporters": {
       "type": "array",
       "description": "Global reporters applied when a profile omits reporters.",
-      "items": { "$ref": "#/definitions/reporterDefinition" }
+      "items": { "$ref": "#/specs/reporterSpec" }
     },
     "hooks": {
-      "$ref": "#/definitions/hooks",
+      "$ref": "#/specs/hooks",
       "description": "Global hooks merged into each profile."
     },
     "ignore": {
@@ -113,8 +113,8 @@
   },
   "required": [],
   "additionalProperties": false,
-  "definitions": {
-    "reporterDefinition": {
+  "specs": {
+    "reporterSpec": {
       "description": "Either the name of a reporter or a tuple [name, options].",
       "oneOf": [
         {
@@ -147,7 +147,7 @@
         },
         {
           "type": "object",
-          "description": "Structured hook definition allowing custom cwd/env and continueOnError toggles.",
+          "description": "Structured hook spec allowing custom cwd/env and continueOnError toggles.",
           "properties": {
             "command": {
               "type": "string",
@@ -177,17 +177,17 @@
       "properties": {
         "onStart": {
           "type": "array",
-          "items": { "$ref": "#/definitions/hookCommand" },
+          "items": { "$ref": "#/specs/hookCommand" },
           "description": "Commands executed before any stage runs."
         },
         "onComplete": {
           "type": "array",
-          "items": { "$ref": "#/definitions/hookCommand" },
+          "items": { "$ref": "#/specs/hookCommand" },
           "description": "Commands executed after the pipeline finishes (success or failure)."
         },
         "onSuccess": {
           "type": "array",
-          "items": { "$ref": "#/definitions/hookCommand" },
+          "items": { "$ref": "#/specs/hookCommand" },
           "description": "Commands executed after all stages succeed."
         },
         "onStageFail": {
@@ -195,7 +195,7 @@
           "description": "Commands executed when stages fail (keyed by stage id or '*').",
           "additionalProperties": {
             "type": "array",
-            "items": { "$ref": "#/definitions/hookCommand" }
+            "items": { "$ref": "#/specs/hookCommand" }
           }
         }
       },
@@ -246,8 +246,8 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "group": { "$ref": "#/definitions/stageGroup" },
-        "output": { "$ref": "#/definitions/stageOutputOptions" },
+        "group": { "$ref": "#/specs/stageGroup" },
+        "output": { "$ref": "#/specs/stageOutputOptions" },
         "continueOnError": { "type": "boolean" },
         "if": {
           "type": "string",
@@ -255,7 +255,7 @@
         },
         "reporters": {
           "type": "array",
-          "items": { "$ref": "#/definitions/reporterDefinition" }
+          "items": { "$ref": "#/specs/reporterSpec" }
         },
         "options": {
           "type": "object",
@@ -265,91 +265,91 @@
       },
       "additionalProperties": false
     },
-    "stagePreset": { "$ref": "#/definitions/stagePresetBase" },
+    "stagePreset": { "$ref": "#/specs/stagePresetBase" },
     "stagePresetImports": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsImports" }
+            "options": { "$ref": "#/specs/adapterOptionsImports" }
           }
         }
       ]
     },
     "stagePresetBunNative": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsBunNative" }
+            "options": { "$ref": "#/specs/adapterOptionsBunNative" }
           }
         }
       ]
     },
     "stagePresetFilenames": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsFilenames" }
+            "options": { "$ref": "#/specs/adapterOptionsFilenames" }
           }
         }
       ]
     },
     "stagePresetStructure": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsStructure" }
+            "options": { "$ref": "#/specs/adapterOptionsStructure" }
           }
         }
       ]
     },
     "stagePresetUnitAdjacency": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsUnitAdjacency" }
+            "options": { "$ref": "#/specs/adapterOptionsUnitAdjacency" }
           }
         }
       ]
     },
     "stagePresetCommand": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsCommand" }
+            "options": { "$ref": "#/specs/adapterOptionsCommand" }
           }
         }
       ]
     },
     "stagePresetPackageScripts": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsPackageScripts" }
+            "options": { "$ref": "#/specs/adapterOptionsPackageScripts" }
           }
         }
       ]
     },
     "stagePresetPackageCatalog": {
       "allOf": [
-        { "$ref": "#/definitions/stagePresetBase" },
+        { "$ref": "#/specs/stagePresetBase" },
         {
           "type": "object",
           "properties": {
-            "options": { "$ref": "#/definitions/adapterOptionsPackageCatalog" }
+            "options": { "$ref": "#/specs/adapterOptionsPackageCatalog" }
           }
         }
       ]
@@ -381,13 +381,13 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "group": { "$ref": "#/definitions/stageGroup" },
-        "output": { "$ref": "#/definitions/stageOutputOptions" },
+        "group": { "$ref": "#/specs/stageGroup" },
+        "output": { "$ref": "#/specs/stageOutputOptions" },
         "continueOnError": { "type": "boolean" },
         "if": { "type": "string" },
         "reporters": {
           "type": "array",
-          "items": { "$ref": "#/definitions/reporterDefinition" }
+          "items": { "$ref": "#/specs/reporterSpec" }
         },
         "overrides": {
           "type": "object",
@@ -399,7 +399,7 @@
     },
     "stage": {
       "allOf": [
-        { "$ref": "#/definitions/stageBase" },
+        { "$ref": "#/specs/stageBase" },
         {
           "type": "object",
           "allOf": [
@@ -407,7 +407,7 @@
               "if": { "properties": { "type": { "const": "imports" } } },
               "then": {
                 "properties": {
-                  "overrides": { "$ref": "#/definitions/adapterOptionsImports" }
+                  "overrides": { "$ref": "#/specs/adapterOptionsImports" }
                 }
               }
             },
@@ -416,7 +416,7 @@
               "then": {
                 "properties": {
                   "overrides": {
-                    "$ref": "#/definitions/adapterOptionsBunNative"
+                    "$ref": "#/specs/adapterOptionsBunNative"
                   }
                 }
               }
@@ -426,7 +426,7 @@
               "then": {
                 "properties": {
                   "overrides": {
-                    "$ref": "#/definitions/adapterOptionsFilenames"
+                    "$ref": "#/specs/adapterOptionsFilenames"
                   }
                 }
               }
@@ -436,7 +436,7 @@
               "then": {
                 "properties": {
                   "overrides": {
-                    "$ref": "#/definitions/adapterOptionsStructure"
+                    "$ref": "#/specs/adapterOptionsStructure"
                   }
                 }
               }
@@ -445,7 +445,7 @@
               "if": { "properties": { "type": { "const": "command" } } },
               "then": {
                 "properties": {
-                  "overrides": { "$ref": "#/definitions/adapterOptionsCommand" }
+                  "overrides": { "$ref": "#/specs/adapterOptionsCommand" }
                 }
               }
             },
@@ -456,7 +456,7 @@
               "then": {
                 "properties": {
                   "overrides": {
-                    "$ref": "#/definitions/adapterOptionsPackageScripts"
+                    "$ref": "#/specs/adapterOptionsPackageScripts"
                   }
                 }
               }
@@ -468,7 +468,7 @@
               "then": {
                 "properties": {
                   "overrides": {
-                    "$ref": "#/definitions/adapterOptionsPackageCatalog"
+                    "$ref": "#/specs/adapterOptionsPackageCatalog"
                   }
                 }
               }
@@ -482,7 +482,7 @@
       "properties": {
         "presets": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/stagePreset" }
+          "additionalProperties": { "$ref": "#/specs/stagePreset" }
         }
       },
       "additionalProperties": false
@@ -492,7 +492,7 @@
       "properties": {
         "presets": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/stagePresetImports" }
+          "additionalProperties": { "$ref": "#/specs/stagePresetImports" }
         }
       },
       "additionalProperties": false
@@ -503,7 +503,7 @@
         "presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/stagePresetBunNative"
+            "$ref": "#/specs/stagePresetBunNative"
           }
         }
       },
@@ -515,7 +515,7 @@
         "presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/stagePresetFilenames"
+            "$ref": "#/specs/stagePresetFilenames"
           }
         }
       },
@@ -527,7 +527,7 @@
         "presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/stagePresetStructure"
+            "$ref": "#/specs/stagePresetStructure"
           }
         }
       },
@@ -539,7 +539,7 @@
         "presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/stagePresetUnitAdjacency"
+            "$ref": "#/specs/stagePresetUnitAdjacency"
           }
         }
       },
@@ -550,7 +550,7 @@
       "properties": {
         "presets": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/stagePresetCommand" }
+          "additionalProperties": { "$ref": "#/specs/stagePresetCommand" }
         }
       },
       "additionalProperties": false
@@ -561,7 +561,7 @@
         "presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/stagePresetPackageScripts"
+            "$ref": "#/specs/stagePresetPackageScripts"
           }
         }
       },
@@ -573,7 +573,7 @@
         "presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/stagePresetPackageCatalog"
+            "$ref": "#/specs/stagePresetPackageCatalog"
           }
         }
       },
@@ -818,7 +818,7 @@
         "commands": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/definitions/commandEntry" }
+          "items": { "$ref": "#/specs/commandEntry" }
         },
         "cwd": { "type": "string" },
         "env": {
@@ -830,7 +830,7 @@
         },
         "timeoutMs": { "type": "number", "minimum": 0 },
         "abortPipelineOnFailure": { "type": "boolean" },
-        "output": { "$ref": "#/definitions/stageOutputOptions" }
+        "output": { "$ref": "#/specs/stageOutputOptions" }
       },
       "additionalProperties": false
     },

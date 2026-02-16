@@ -204,7 +204,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -228,7 +228,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(consoleSpy).toHaveBeenCalledTimes(1);
@@ -263,7 +263,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(false);
@@ -295,7 +295,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -325,7 +325,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(false);
@@ -375,7 +375,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
       dryRun: true,
     });
 
@@ -407,7 +407,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(false);
@@ -464,7 +464,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -516,7 +516,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -571,7 +571,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -596,7 +596,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -638,7 +638,7 @@ describe("runPipeline", () => {
         mode: "check",
         files: [],
         config,
-        reporterDefinitions: [],
+        reporterSpecs: [],
       });
 
       expect(result.success).toBe(true);
@@ -674,7 +674,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(false);
@@ -699,7 +699,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: ["src/index.ts", "ignored/temp.ts"],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(observedFiles.get("stage:files")).toEqual(["src/index.ts"]);
@@ -718,7 +718,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: ["tmp/work.ts"],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(observedFiles.get("stage:tmp")).toEqual(["tmp/work.ts"]);
@@ -745,7 +745,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(false);
@@ -779,7 +779,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -818,7 +818,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -851,7 +851,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(false);
@@ -874,7 +874,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: ["src/app.ts", "docs/readme.md"],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);
@@ -895,7 +895,7 @@ describe("runPipeline", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
       onStageStart,
       onStageComplete,
     });
@@ -919,7 +919,7 @@ describe("runPipeline", () => {
       mode: "fix",
       files: [],
       config,
-      reporterDefinitions: [],
+      reporterSpecs: [],
     });
 
     expect(result.success).toBe(true);

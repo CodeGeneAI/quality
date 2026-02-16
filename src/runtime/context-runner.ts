@@ -1,7 +1,7 @@
 import type { ResolvedConfig } from "../config/loader";
 import type { ResolvedStage } from "../config/types";
-import { ensureReporterDefinitions } from "../reporters/registry";
-import type { ReporterDefinition } from "../reporters/types";
+import { ensureReporterSpecs } from "../reporters/registry";
+import type { ReporterSpec } from "../reporters/types";
 import { shouldIgnorePath } from "../utils/glob";
 import type { StageSelectionContext } from "./stage-selection";
 import { selectStagesForContext } from "./stage-selection";
@@ -9,7 +9,7 @@ import { selectStagesForContext } from "./stage-selection";
 export interface PreparedExecutionContext {
   readonly files: readonly string[];
   readonly stages: readonly ResolvedStage[];
-  readonly reporters: readonly ReporterDefinition[];
+  readonly reporters: readonly ReporterSpec[];
   readonly skipped: boolean;
 }
 
@@ -18,7 +18,7 @@ export interface PrepareExecutionContextOptions {
   readonly context: StageSelectionContext;
   readonly files: readonly string[];
   readonly requestedStageIds?: readonly string[];
-  readonly reporterOverrides?: readonly ReporterDefinition[];
+  readonly reporterOverrides?: readonly ReporterSpec[];
 }
 
 export const prepareExecutionContext = (
@@ -35,11 +35,11 @@ export const prepareExecutionContext = (
     },
   });
 
-  const requestedReporters = mergeReporterDefinitions(
+  const requestedReporters = mergeReporterSpecs(
     options.config.profile.reporters,
     options.reporterOverrides,
   );
-  const reporters = ensureReporterDefinitions(requestedReporters);
+  const reporters = ensureReporterSpecs(requestedReporters);
 
   const skipped = stages.length === 0;
 
@@ -51,10 +51,10 @@ export const prepareExecutionContext = (
   } satisfies PreparedExecutionContext;
 };
 
-const mergeReporterDefinitions = (
-  base: readonly ReporterDefinition[] | undefined,
-  overrides: readonly ReporterDefinition[] | undefined,
-): ReporterDefinition[] => {
+const mergeReporterSpecs = (
+  base: readonly ReporterSpec[] | undefined,
+  overrides: readonly ReporterSpec[] | undefined,
+): ReporterSpec[] => {
   if (!base && !overrides) {
     return ["summary"];
   }

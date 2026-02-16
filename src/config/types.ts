@@ -1,5 +1,5 @@
 import type { ResolvedHooks } from "../pipeline/hooks";
-import type { ReporterDefinition } from "../reporters/types";
+import type { ReporterSpec } from "../reporters/types";
 
 export type FilesMode = "staged" | "workspace" | "commits" | "none";
 
@@ -15,7 +15,7 @@ export interface StageGroupConfig {
   readonly continueOnError?: boolean;
 }
 
-export interface QualityStageDefinition {
+export interface QualityStageSpec {
   readonly id: string;
   readonly type: string;
   readonly preset?: string;
@@ -29,10 +29,10 @@ export interface QualityStageDefinition {
   readonly group?: StageGroupReference;
   readonly continueOnError?: boolean;
   readonly if?: string;
-  readonly reporters?: readonly ReporterDefinition[];
+  readonly reporters?: readonly ReporterSpec[];
 }
 
-export interface StagePresetDefinition {
+export interface StagePresetSpec {
   readonly extends?: string | readonly string[];
   readonly label?: string;
   readonly description?: string;
@@ -43,7 +43,7 @@ export interface StagePresetDefinition {
   readonly group?: StageGroupReference;
   readonly continueOnError?: boolean;
   readonly if?: string;
-  readonly reporters?: readonly ReporterDefinition[];
+  readonly reporters?: readonly ReporterSpec[];
   readonly options?: Record<string, unknown>;
 }
 
@@ -58,7 +58,7 @@ export interface StageOutputOptions {
 }
 
 export interface StageAdapterCatalogEntry {
-  presets?: Record<string, StagePresetDefinition>;
+  presets?: Record<string, StagePresetSpec>;
 }
 
 export interface StageCatalogConfig {
@@ -66,8 +66,8 @@ export interface StageCatalogConfig {
 }
 
 export interface QualityProfileConfig {
-  readonly pipeline?: readonly QualityStageDefinition[];
-  readonly reporters?: readonly ReporterDefinition[];
+  readonly pipeline?: readonly QualityStageSpec[];
+  readonly reporters?: readonly ReporterSpec[];
   readonly hooks?: QualityHooksConfig;
   readonly filesMode?: FilesMode;
   readonly parallelLimit?: number;
@@ -86,13 +86,13 @@ export interface QualityProfileConfig {
 }
 
 export interface QualityHooksConfig {
-  readonly onStart?: readonly HookDefinition[];
-  readonly onComplete?: readonly HookDefinition[];
-  readonly onSuccess?: readonly HookDefinition[];
-  readonly onStageFail?: Record<string, readonly HookDefinition[]>;
+  readonly onStart?: readonly HookSpec[];
+  readonly onComplete?: readonly HookSpec[];
+  readonly onSuccess?: readonly HookSpec[];
+  readonly onStageFail?: Record<string, readonly HookSpec[]>;
 }
 
-export type HookDefinition =
+export type HookSpec =
   | string
   | {
       readonly command: string;
@@ -111,7 +111,7 @@ export interface QualityConfig {
     string,
     QualityProfileConfig & { extends?: string }
   >;
-  readonly reporters?: readonly ReporterDefinition[];
+  readonly reporters?: readonly ReporterSpec[];
   readonly hooks?: QualityHooksConfig;
 }
 
@@ -124,18 +124,18 @@ export interface ResolvedStageGroup {
 }
 
 export interface ResolvedStage<TOptions = unknown>
-  extends Omit<QualityStageDefinition, "preset" | "overrides" | "group"> {
+  extends Omit<QualityStageSpec, "preset" | "overrides" | "group"> {
   readonly group?: ResolvedStageGroup;
   readonly options: TOptions;
   readonly preset?: string;
-  readonly reporters?: readonly ReporterDefinition[];
+  readonly reporters?: readonly ReporterSpec[];
   readonly alwaysRun?: boolean;
 }
 
 export interface ResolvedQualityProfile {
   readonly name: string;
   readonly pipeline: readonly ResolvedStage[];
-  readonly reporters: readonly ReporterDefinition[];
+  readonly reporters: readonly ReporterSpec[];
   readonly hooks: ResolvedHooks;
   readonly filesMode?: FilesMode;
   readonly parallelLimit?: number;

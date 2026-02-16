@@ -7,7 +7,7 @@ import {
   analyzeTelemetryFile,
   collectFilesForMode,
   createConsoleProgressReporter,
-  ensureReporterDefinitions,
+  ensureReporterSpecs,
   type FileCollectionMode,
   type FilesMode,
   getAdapter,
@@ -16,13 +16,13 @@ import {
   loadAdapterModule,
   loadQualityConfig,
   type ParallelLimitSummary,
-  type ReporterDefinition,
+  type ReporterSpec,
   type ResolvedConfig,
   type ResolvedStage,
   registerBuiltInAdapters,
   resetAdapters,
   runPipeline,
-  type StagePresetDefinition,
+  type StagePresetSpec,
 } from "../index";
 
 export abstract class QualityBaseCommand extends Command {
@@ -41,24 +41,24 @@ export abstract class QualityBaseCommand extends Command {
 
   protected debugCleanup?: () => void;
 
-  protected buildReporterDefinitions(
-    defaults: readonly ReporterDefinition[],
-  ): ReporterDefinition[] {
+  protected buildReporterSpecs(
+    defaults: readonly ReporterSpec[],
+  ): ReporterSpec[] {
     const reporters = [...defaults];
     const overrides = this.collectReporterOverrides();
     if (overrides) {
       reporters.push(...overrides);
     }
-    return ensureReporterDefinitions(reporters);
+    return ensureReporterSpecs(reporters);
   }
 
-  protected collectReporterOverrides(): ReporterDefinition[] | undefined {
-    const overrides: ReporterDefinition[] = [];
+  protected collectReporterOverrides(): ReporterSpec[] | undefined {
+    const overrides: ReporterSpec[] = [];
     if (this.jsonPath) {
       overrides.push(["json", { path: this.jsonPath }]);
     }
     for (const reporterName of this.reporter ?? []) {
-      overrides.push(reporterName as ReporterDefinition);
+      overrides.push(reporterName as ReporterSpec);
     }
     return overrides.length > 0 ? overrides : undefined;
   }
@@ -154,7 +154,7 @@ export class QualityListCommand extends QualityBaseCommand {
     for (const adapter of adapters) {
       const catalogEntry = config.stageCatalog[adapter.type];
       const presets = Object.entries(catalogEntry?.presets ?? {}) as Array<
-        [string, StagePresetDefinition]
+        [string, StagePresetSpec]
       >;
       const headerLabel = adapter.label ? `: ${adapter.label}` : "";
       const description = adapter.description
@@ -236,7 +236,7 @@ export class QualityRunCommand extends QualityBaseCommand {
       root: config.root,
     });
 
-    const reporters = this.buildReporterDefinitions(config.profile.reporters);
+    const reporters = this.buildReporterSpecs(config.profile.reporters);
     const pipeline: ResolvedStage[] = [
       ...filterStages(config.profile.pipeline, this.stage),
     ];
@@ -299,7 +299,7 @@ export class QualityRunCommand extends QualityBaseCommand {
             mode: "fix",
             files: effectiveFiles,
             config,
-            reporterDefinitions: reporters,
+            reporterSpecs: reporters,
             stages: fixableStages,
             dryRun,
             telemetry: buildTelemetry("fix"),
@@ -318,7 +318,7 @@ export class QualityRunCommand extends QualityBaseCommand {
         mode: "check",
         files: effectiveFiles,
         config,
-        reporterDefinitions: reporters,
+        reporterSpecs: reporters,
         stages: pipeline,
         dryRun,
         telemetry: buildTelemetry(autoFixRequested ? "verify" : "check"),
@@ -357,7 +357,7 @@ export class QualityRunStageCommand extends QualityBaseCommand {
       configFilesMode: config.profile.filesMode,
       root: config.root,
     });
-    const reporters = this.buildReporterDefinitions(config.profile.reporters);
+    const reporters = this.buildReporterSpecs(config.profile.reporters);
     const requestedMode = normalizeMode(this.mode);
     const pipeline: ResolvedStage[] = [
       ...filterStages(config.profile.pipeline, [this.stageId]),
@@ -426,7 +426,7 @@ export class QualityRunStageCommand extends QualityBaseCommand {
             mode: "fix",
             files: effectiveFiles,
             config,
-            reporterDefinitions: reporters,
+            reporterSpecs: reporters,
             stages: fixableStages,
             dryRun,
             telemetry: buildTelemetry("fix"),
@@ -442,7 +442,7 @@ export class QualityRunStageCommand extends QualityBaseCommand {
           mode: "check",
           files: effectiveFiles,
           config,
-          reporterDefinitions: reporters,
+          reporterSpecs: reporters,
           stages: pipeline,
           dryRun,
           telemetry: buildTelemetry("verify"),
@@ -461,7 +461,7 @@ export class QualityRunStageCommand extends QualityBaseCommand {
           mode: pipelineMode,
           files: effectiveFiles,
           config,
-          reporterDefinitions: reporters,
+          reporterSpecs: reporters,
           stages: pipeline,
           dryRun,
           telemetry: buildTelemetry("check"),

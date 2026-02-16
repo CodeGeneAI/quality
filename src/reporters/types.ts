@@ -1,6 +1,6 @@
 export type ReporterName = "summary" | "json" | "junit" | "verbose";
 
-export type ReporterDefinition =
+export type ReporterSpec =
   | ReporterName
   | readonly [ReporterName, ReporterOptions?];
 

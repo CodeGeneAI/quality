@@ -90,7 +90,7 @@ describe("telemetry runtime integration", () => {
       mode: "check",
       files: [],
       config,
-      reporterDefinitions: config.profile.reporters,
+      reporterSpecs: config.profile.reporters,
       stages: config.profile.pipeline,
     });
 

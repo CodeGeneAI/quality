@@ -34,7 +34,7 @@ describe("package-catalog adapter – integration", () => {
       config,
       mode: "check",
       files: [],
-      reporterDefinitions: config.profile.reporters,
+      reporterSpecs: config.profile.reporters,
       stages: config.profile.pipeline,
     });
 
@@ -52,7 +52,7 @@ describe("package-catalog adapter – integration", () => {
       config,
       mode: "fix",
       files: [],
-      reporterDefinitions: config.profile.reporters,
+      reporterSpecs: config.profile.reporters,
       stages: config.profile.pipeline,
     });
 

@@ -25,7 +25,7 @@ Deliver a single declarative quality pipeline for the monorepo: composable stage
 - `quality check|fix` runs the full pipeline (or filtered stages via `--stage`).
 - `quality run --stage <id>` executes a single stage for debugging.
 - `quality list --adapters` prints registered adapters with preset metadata.
-- `quality validate-config` shows the merged profile/stage definition.
+- `quality validate-config` shows the merged profile/stage spec.
 - `quality init` scaffolds a config with presets, groups, and command examples.
 - Use Husky to wire Git hooks to quality profiles (see README for sample pre-commit/pre-push scripts with Git LFS). The quality CLI no longer manages `.git/hooks` shims.
 - Telemetry toggles: `--telemetry stdout|file`, `--telemetry-file <path>`, and `--debug` populate `QUALITY_TELEMETRY*` env vars for JSON diagnostics.

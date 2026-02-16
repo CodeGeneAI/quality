@@ -1,15 +1,11 @@
 import { runJsonReporter } from "./json";
 import { runJUnitReporter } from "./junit";
 import { runSummaryReporter } from "./summary";
-import type {
-  PipelineResult,
-  ReporterDefinition,
-  ReporterOptions,
-} from "./types";
+import type { PipelineResult, ReporterOptions, ReporterSpec } from "./types";
 
 export const runReporters = async (
   result: PipelineResult,
-  reporters: readonly ReporterDefinition[],
+  reporters: readonly ReporterSpec[],
   root: string,
 ): Promise<void> => {
   for (const reporter of reporters) {

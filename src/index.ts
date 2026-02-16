@@ -15,11 +15,11 @@ export { loadQualityConfig, type ResolvedConfig } from "./config/loader";
 export type {
   FilesMode,
   ResolvedStage,
-  StagePresetDefinition,
+  StagePresetSpec,
 } from "./config/types";
 export { runPipeline } from "./pipeline/runner";
-export { ensureReporterDefinitions } from "./reporters/registry";
-export type { ReporterDefinition } from "./reporters/types";
+export { ensureReporterSpecs } from "./reporters/registry";
+export type { ReporterSpec } from "./reporters/types";
 export {
   collectFilesForMode,
   type FileCollectionMode,

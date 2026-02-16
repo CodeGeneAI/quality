@@ -179,7 +179,7 @@ Setup steps:
 
 Define dedicated profiles (e.g., `pre-commit`, `pre-push`) in `.qualityrc` so hook commands stay stable. Husky lives at `.husky/` (via `core.hooksPath`), avoiding conflicts with Git LFS and other tools.
 
-### Stage definitions
+### Stage specs
 
 Each stage entry resolves to a `ResolvedStage` with these fields:
 
@@ -208,7 +208,7 @@ File globs declared under `files` are resolved asynchronously and cached per pat
 - Prefer short, explicit checks such as `env.NODE_ENV === "ci"` or `env.QUALITY_FLAG === "1"`; avoid chained logic that hides failure modes (`(env.A === "1" && env.B === "1") || env.C === "1"`).
 - Conditions resolve missing environment variables to `undefined`; include defaults explicitly (for example, `env.TARGET ?? "local" === "ci"` is not supported, use `env.TARGET === "ci"`).
 - Wrap string literals in quotes and avoid interpolated paths or shell expressions. All unknown tokens cause the condition to evaluate to `false` so the stage is skipped.
-- Capture common guardrails in presets (for example, a `ci-only` preset that sets `if: "env.CI === \"true\""`) to keep stage definitions consistent across services.
+- Capture common guardrails in presets (for example, a `ci-only` preset that sets `if: "env.CI === \"true\""`) to keep stage specs consistent across services.
 - Share this guidance with config authors when adding new profiles to reduce invalid `if` expressions; keep conditions short, quoted, and explicit.
 
 ### Groups & parallel execution
@@ -299,8 +299,8 @@ The loader resolves module paths relative to the config file, registers adapters
 `packages/quality/schemas/qualityrc.schema.json` describes:
 
 - Root keys (`$schema`, `adapters`, `stages`, `profiles`, `reporters`, `hooks`).
-- Built-in adapter option definitions (imports/bun-native/filenames/structure/no-root-barrel/command).
-- Group metadata, parallel semantics, and hook definitions.
+- Built-in adapter option specs (imports/bun-native/filenames/structure/no-root-barrel/command).
+- Group metadata, parallel semantics, and hook specs.
 
 Unit tests use a vendored JSON Schema validator to ensure sample `.qualityrc` files remain compliant. Point editors at the relative schema path or host the schema at `$id` for global distribution.
 

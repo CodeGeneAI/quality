@@ -244,7 +244,7 @@ var FORMAT_REGEXPS = (exports.FORMAT_REGEXPS = {
     return result;
   },
 
-  // Other definitions
+  // Other specs
   // "style" was removed from JSON Schema in draft-4 and is deprecated
   style: /[\r\n\t ]*[^\r\n\t ][^:]*:[\r\n\t ]*[^\r\n\t ;]*[\r\n\t ]*;?/,
   // "color" was removed from JSON Schema in draft-4 and is deprecated

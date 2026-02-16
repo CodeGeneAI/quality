@@ -1,4 +1,4 @@
-import type { ReporterDefinition, ReporterName } from "./types";
+import type { ReporterName, ReporterSpec } from "./types";
 
 const REPORTER_NAMES: readonly ReporterName[] = [
   "summary",
@@ -10,11 +10,11 @@ const REPORTER_NAMES: readonly ReporterName[] = [
 const isReporterName = (value: string): value is ReporterName =>
   (REPORTER_NAMES as readonly string[]).includes(value);
 
-export const ensureReporterDefinitions = (
-  reporters: readonly ReporterDefinition[] | ReporterDefinition,
-): ReporterDefinition[] => {
+export const ensureReporterSpecs = (
+  reporters: readonly ReporterSpec[] | ReporterSpec,
+): ReporterSpec[] => {
   const list = Array.isArray(reporters) ? reporters : [reporters];
-  const normalized: ReporterDefinition[] = [];
+  const normalized: ReporterSpec[] = [];
   for (const entry of list) {
     if (typeof entry === "string") {
       if (isReporterName(entry)) {
@@ -26,7 +26,7 @@ export const ensureReporterDefinitions = (
       typeof entry[0] === "string" &&
       isReporterName(entry[0])
     ) {
-      const tuple: ReporterDefinition = [entry[0], entry[1]];
+      const tuple: ReporterSpec = [entry[0], entry[1]];
       normalized.push(tuple);
     }
   }

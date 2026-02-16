@@ -8,7 +8,7 @@ const runPipeline = vi.fn();
 const loadQualityConfig = vi.fn();
 const collectFilesForMode = vi.fn();
 const createConsoleProgressReporter = vi.fn();
-const ensureReporterDefinitions = vi.fn();
+const ensureReporterSpecs = vi.fn();
 const getAdapter = vi.fn();
 
 vi.mock("../index", () => ({
@@ -16,8 +16,7 @@ vi.mock("../index", () => ({
   collectFilesForMode: (...args: unknown[]) => collectFilesForMode(...args),
   createConsoleProgressReporter: (...args: unknown[]) =>
     createConsoleProgressReporter(...args),
-  ensureReporterDefinitions: (...args: unknown[]) =>
-    ensureReporterDefinitions(...args),
+  ensureReporterSpecs: (...args: unknown[]) => ensureReporterSpecs(...args),
   getAdapter: (...args: unknown[]) => getAdapter(...args),
   isTelemetryEnabled: () => false,
   listAdapters: vi.fn(),
@@ -80,9 +79,7 @@ const defaultConfig = {
 describe("quality check auto-fix preference", () => {
   beforeEach(() => {
     runPipeline.mockResolvedValue({ success: true });
-    ensureReporterDefinitions.mockImplementation(
-      (reporters: unknown) => reporters,
-    );
+    ensureReporterSpecs.mockImplementation((reporters: unknown) => reporters);
     collectFilesForMode.mockResolvedValue([]);
     createConsoleProgressReporter.mockReturnValue({
       stageStarted: vi.fn(),
