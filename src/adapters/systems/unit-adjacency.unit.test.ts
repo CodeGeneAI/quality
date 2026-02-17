@@ -1,7 +1,7 @@
+import { describe, expect, it } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { describe, expect, it } from "bun:test";
 
 import type { ResolvedStage } from "../../config/types";
 import {

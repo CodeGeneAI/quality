@@ -1,7 +1,7 @@
-import { stat } from "fs/promises";
 import { statSync } from "fs";
-import { resolve } from "path";
+import { stat } from "fs/promises";
 import micromatch from "micromatch";
+import { resolve } from "path";
 import { normalizePath } from "./glob";
 
 type GlobSource = string | readonly string[];
@@ -20,7 +20,7 @@ interface BunGlobLike {
 }
 
 const toPatternArray = (value: GlobSource): string[] =>
-  Array.isArray(value) ? [...value] : [value];
+  Array.isArray(value) ? [...value] : [value as string];
 
 const splitPatterns = (
   source: GlobSource,
@@ -119,7 +119,10 @@ const runGlob = async (
   return finalizeMatches(matches, unique);
 };
 
-const runGlobSync = (source: GlobSource, options: GlobOptions = {}): string[] => {
+const runGlobSync = (
+  source: GlobSource,
+  options: GlobOptions = {},
+): string[] => {
   const cwd = options.cwd ?? process.cwd();
   const dot = options.dot ?? false;
   const unique = options.unique !== false;

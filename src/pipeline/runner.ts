@@ -1,4 +1,3 @@
-import fg from "../utils/bun-glob";
 import micromatch from "micromatch";
 import { performance } from "perf_hooks";
 import { getAdapter } from "../adapters/registry";
@@ -14,6 +13,7 @@ import type {
 } from "../reporters/types";
 import { debugLog } from "../runtime/debug";
 import { isTelemetryEnabled, publishTelemetry } from "../runtime/telemetry";
+import fg from "../utils/bun-glob";
 import { evaluateCondition } from "../utils/condition";
 import {
   DEFAULT_GLOB_IGNORE,

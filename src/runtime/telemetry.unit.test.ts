@@ -1,7 +1,7 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
 import { mkdtemp } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
 import type { PipelineResult } from "../reporters/types";
 import { readTextFile } from "../utils/fs";
 import { isTelemetryEnabled, publishTelemetry } from "./telemetry";

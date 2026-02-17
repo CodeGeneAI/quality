@@ -1,5 +1,5 @@
-import fg from "../../utils/bun-glob";
 import micromatch from "micromatch";
+import fg from "../../utils/bun-glob";
 import { pathExists } from "../../utils/fs";
 import {
   DEFAULT_GLOB_IGNORE,

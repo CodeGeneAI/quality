@@ -1,5 +1,3 @@
-import { Cli } from "clipanion";
-import { Writable } from "stream";
 import {
   afterEach,
   beforeEach,
@@ -9,6 +7,29 @@ import {
   mock,
   vi,
 } from "bun:test";
+
+const mocked = <T>(value: T) =>
+  value as T & {
+    mock: { calls: unknown[][]; results: unknown[] };
+    mockClear: () => unknown;
+    mockReset: () => unknown;
+    mockRestore: () => unknown;
+    mockImplementation: (
+      implementation: (...args: unknown[]) => unknown,
+    ) => unknown;
+    mockImplementationOnce: (
+      implementation: (...args: unknown[]) => unknown,
+    ) => unknown;
+    mockReturnValue: (value: unknown) => unknown;
+    mockReturnValueOnce: (value: unknown) => unknown;
+    mockResolvedValue: (value: unknown) => unknown;
+    mockResolvedValueOnce: (value: unknown) => unknown;
+    mockRejectedValue: (value: unknown) => unknown;
+    mockRejectedValueOnce: (value: unknown) => unknown;
+  };
+
+import { Cli } from "clipanion";
+import { Writable } from "stream";
 
 const runPipeline = vi.fn();
 const loadQualityConfig = vi.fn();
@@ -85,10 +106,12 @@ describe("quality check auto-fix preference", () => {
       runPipeline: (...args: unknown[]) => runPipeline(...args),
     }));
 
-    runPipeline.mockResolvedValue({ success: true });
-    ensureReporterSpecs.mockImplementation((reporters: unknown) => reporters);
-    collectFilesForMode.mockResolvedValue([]);
-    createConsoleProgressReporter.mockReturnValue({
+    mocked(runPipeline).mockResolvedValue({ success: true });
+    mocked(ensureReporterSpecs).mockImplementation(
+      (reporters: unknown) => reporters,
+    );
+    mocked(collectFilesForMode).mockResolvedValue([]);
+    mocked(createConsoleProgressReporter).mockReturnValue({
       stageStarted: vi.fn(),
       stageCompleted: vi.fn(),
       withPhase: vi.fn(() => ({
@@ -97,8 +120,8 @@ describe("quality check auto-fix preference", () => {
       })),
       finish: vi.fn(),
     });
-    getAdapter.mockReturnValue({ supportsModes: ["fix"] });
-    loadQualityConfig.mockResolvedValue({ ...defaultConfig });
+    mocked(getAdapter).mockReturnValue({ supportsModes: ["fix"] });
+    mocked(loadQualityConfig).mockResolvedValue({ ...defaultConfig });
   });
 
   afterEach(() => {
@@ -143,7 +166,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("runs fixable stages automatically when the profile opts in", async () => {
-    loadQualityConfig.mockResolvedValue({
+    mocked(loadQualityConfig).mockResolvedValue({
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: true },
     });
@@ -167,7 +190,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("allows opting out of profile defaults via --no-auto-fix", async () => {
-    loadQualityConfig.mockResolvedValue({
+    mocked(loadQualityConfig).mockResolvedValue({
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: true },
     });
@@ -207,7 +230,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("lets the CLI override a profile auto-fix opt-out", async () => {
-    loadQualityConfig.mockResolvedValue({
+    mocked(loadQualityConfig).mockResolvedValue({
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: false },
     });
@@ -231,7 +254,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("defaults to no auto-fix when neither the CLI nor profile enable it", async () => {
-    loadQualityConfig.mockResolvedValue({
+    mocked(loadQualityConfig).mockResolvedValue({
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: undefined },
     });
@@ -267,7 +290,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("informs the user when auto-fix is requested but no stages support it", async () => {
-    getAdapter.mockReturnValue({ supportsModes: ["check"] });
+    mocked(getAdapter).mockReturnValue({ supportsModes: ["check"] });
     const cli = await buildCli();
     const out = capture();
 

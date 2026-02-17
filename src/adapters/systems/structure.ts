@@ -1,5 +1,5 @@
-import fg from "../../utils/bun-glob";
 import path from "path";
+import fg from "../../utils/bun-glob";
 import {
   DEFAULT_GLOB_IGNORE,
   mergeIgnorePatterns,

@@ -1,8 +1,8 @@
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { cp, mkdtemp, readFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { fileURLToPath } from "url";
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { loadQualityConfig } from "../../config/loader";
 import { runPipeline } from "../../pipeline/runner";
 import { registerBuiltInAdapters } from "../register-builtins";

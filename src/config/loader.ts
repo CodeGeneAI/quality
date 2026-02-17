@@ -1,9 +1,9 @@
-import fg from "../utils/bun-glob";
 import { realpath } from "fs/promises";
 import { parse } from "jsonc-parser";
 import { ensureHooks } from "../pipeline/hooks";
 import { ensureReporterSpecs } from "../reporters/registry";
 import type { ReporterSpec } from "../reporters/types";
+import fg from "../utils/bun-glob";
 import { pathExists, readTextFile } from "../utils/fs";
 import { mergeDeep } from "../utils/merge";
 import { dirname, joinPaths, relativePath, resolvePath } from "../utils/path";

@@ -1,7 +1,7 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
 
 import { registerAdapter, resetAdapters } from "../adapters/registry";
 import type { StageAdapter } from "../adapters/types";

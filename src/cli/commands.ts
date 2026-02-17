@@ -1,5 +1,4 @@
 import { Command, Option } from "clipanion";
-import fg from "../utils/bun-glob";
 import { readFile } from "fs/promises";
 import { parse } from "jsonc-parser";
 import path from "path";
@@ -24,6 +23,7 @@ import {
   runPipeline,
   type StagePresetSpec,
 } from "../index";
+import fg from "../utils/bun-glob";
 
 export abstract class QualityBaseCommand extends Command {
   profile = Option.String("--profile", { required: false });

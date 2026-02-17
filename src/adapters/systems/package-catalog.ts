@@ -1,5 +1,5 @@
-import fg from "../../utils/bun-glob";
 import micromatch from "micromatch";
+import fg from "../../utils/bun-glob";
 import { readJsonFile, writeTextFile } from "../../utils/fs";
 import { mergeIgnorePatterns } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
