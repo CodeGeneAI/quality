@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import micromatch from "micromatch";
 import { dirname } from "path";
 import { readJsonFile, readTextFile } from "../../utils/fs";
@@ -21,7 +21,7 @@ export interface BarrelExportsAdapterOptions {
   /**
    * Package names or glob patterns to ignore.
    * Matches against the package name from package.json.
-   * @example ["@codegeneai/di", "@codegeneai/legacy-*"]
+   * @example ["@codegeneai/workflow-sdk", "@codegeneai/legacy-*"]
    */
   readonly ignore?: readonly string[];
 }

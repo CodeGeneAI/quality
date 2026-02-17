@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import micromatch from "micromatch";
 import { pathExists } from "../../utils/fs";
 import {

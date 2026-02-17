@@ -1,5 +1,5 @@
 import { Command, Option } from "clipanion";
-import fg from "fast-glob";
+import fg from "../utils/bun-glob";
 import { readFile } from "fs/promises";
 import { parse } from "jsonc-parser";
 import path from "path";

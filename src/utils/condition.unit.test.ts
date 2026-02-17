@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "bun:test";
 import { evaluateCondition } from "./condition";
 
 describe("evaluateCondition", () => {

@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { packageCatalogAdapter } from "./package-catalog";
 
 const createWorkspace = async (): Promise<string> =>

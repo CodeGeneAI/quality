@@ -1,7 +1,7 @@
 // Node's fs.promises API is used here because Bun does not yet expose a high-level
 // rename helper that preserves atomic filesystem semantics.
 
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import { mkdir, rename as renameFile } from "fs/promises";
 import micromatch from "micromatch";
 import { pathExists } from "../../utils/fs";

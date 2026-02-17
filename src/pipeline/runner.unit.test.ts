@@ -1,52 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import type { MockInstance } from "vitest";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-type FastGlob = (
-  patterns: string | readonly string[],
-  options?: unknown,
-) => Promise<string[]>;
-
-type HoistedFastGlob = {
-  readonly spy: MockInstance<FastGlob>;
-  readonly setReal: (impl: FastGlob) => void;
-  readonly reset: () => void;
-};
-
-const fgMock = vi.hoisted<HoistedFastGlob>(() => {
-  const spy = vi.fn<FastGlob>();
-  let real: FastGlob | undefined;
-  return {
-    spy,
-    setReal(impl: FastGlob) {
-      real = impl;
-      spy.mockImplementation((...args: Parameters<FastGlob>) => real!(...args));
-    },
-    reset() {
-      spy.mockReset();
-      if (real) {
-        spy.mockImplementation((...args: Parameters<FastGlob>) =>
-          real!(...args),
-        );
-      }
-    },
-  };
-});
-
-vi.mock("fast-glob", async () => {
-  const actualModule =
-    await vi.importActual<typeof import("fast-glob")>("fast-glob");
-  const candidate =
-    (actualModule as { default?: unknown }).default ??
-    (actualModule as unknown);
-  if (typeof candidate !== "function") {
-    throw new Error("fast-glob default export is not a function");
-  }
-  fgMock.setReal(candidate as FastGlob);
-  return { default: fgMock.spy };
-});
+import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
 
 import { registerAdapter, resetAdapters } from "../adapters/registry";
 import type { StageAdapter } from "../adapters/types";
@@ -140,7 +95,6 @@ beforeEach(() => {
   resetAdapters();
   registerAdapter(stubAdapter);
   registerAdapter(checkOnlyAdapter);
-  fgMock.reset();
 });
 
 afterEach(() => {
@@ -626,7 +580,6 @@ describe("runPipeline", () => {
       process.chdir(tmpDir);
       fs.writeFileSync(path.join(tmpDir, "one.ts"), "// one");
       fs.writeFileSync(path.join(tmpDir, "two.ts"), "// two");
-      fgMock.spy.mockClear();
 
       const stages = [
         createStage({ id: "first", files: ["**/*.ts"] }),
@@ -642,15 +595,11 @@ describe("runPipeline", () => {
       });
 
       expect(result.success).toBe(true);
-      const globCallsForPattern = fgMock.spy.mock.calls.filter(
-        ([patterns]: Parameters<FastGlob>) =>
-          JSON.stringify(patterns) === JSON.stringify(["**/*.ts"]),
-      );
-      expect(globCallsForPattern).toHaveLength(1);
+      expect(observedFiles.get("first")).toEqual(["one.ts", "two.ts"]);
+      expect(observedFiles.get("second")).toEqual(["one.ts", "two.ts"]);
     } finally {
       process.chdir(originalCwd);
       fs.rmSync(tmpDir, { recursive: true, force: true });
-      fgMock.spy.mockClear();
     }
   });
 

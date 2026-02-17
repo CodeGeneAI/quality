@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import { existsSync } from "fs";
 import path from "path";
 import z from "zod";

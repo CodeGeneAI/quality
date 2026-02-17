@@ -31,13 +31,12 @@
   "scripts": {
     "lint": "biome check --write --diagnostic-level=error",
     "typecheck": "bun --bun tsc --noEmit",
-    "test:unit": "bun --bun vitest run --config vitest.unit.config.ts",
+    "test:unit": "bun test ./src",
     "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
   },
   "dependencies": {
     "clipanion": "catalog:cli",
     "diff-match-patch": "catalog:tooling",
-    "fast-glob": "catalog:tooling",
     "jsonc-parser": "catalog:tooling",
     "kleur": "catalog:tooling",
     "micromatch": "catalog:tooling",

@@ -1,8 +1,14 @@
 import { Cli } from "clipanion";
 import { Writable } from "stream";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-import { QualityRunCommand } from "./commands";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  vi,
+} from "bun:test";
 
 const runPipeline = vi.fn();
 const loadQualityConfig = vi.fn();
@@ -10,22 +16,6 @@ const collectFilesForMode = vi.fn();
 const createConsoleProgressReporter = vi.fn();
 const ensureReporterSpecs = vi.fn();
 const getAdapter = vi.fn();
-
-vi.mock("../index", () => ({
-  analyzeTelemetryFile: vi.fn(),
-  collectFilesForMode: (...args: unknown[]) => collectFilesForMode(...args),
-  createConsoleProgressReporter: (...args: unknown[]) =>
-    createConsoleProgressReporter(...args),
-  ensureReporterSpecs: (...args: unknown[]) => ensureReporterSpecs(...args),
-  getAdapter: (...args: unknown[]) => getAdapter(...args),
-  isTelemetryEnabled: () => false,
-  listAdapters: vi.fn(),
-  loadAdapterModule: vi.fn(),
-  loadQualityConfig: (...args: unknown[]) => loadQualityConfig(...args),
-  registerBuiltInAdapters: vi.fn(),
-  resetAdapters: vi.fn(),
-  runPipeline: (...args: unknown[]) => runPipeline(...args),
-}));
 
 const capture = () => {
   const chunks: string[] = [];
@@ -38,7 +28,8 @@ const capture = () => {
   return { sink, read: () => chunks.join("") };
 };
 
-const buildCli = () => {
+const buildCli = async () => {
+  const { QualityRunCommand } = await import("./commands");
   const cli = new Cli({
     binaryLabel: "quality-test",
     binaryName: "quality",
@@ -78,6 +69,22 @@ const defaultConfig = {
 
 describe("quality check auto-fix preference", () => {
   beforeEach(() => {
+    mock.module("../index", () => ({
+      analyzeTelemetryFile: vi.fn(),
+      collectFilesForMode: (...args: unknown[]) => collectFilesForMode(...args),
+      createConsoleProgressReporter: (...args: unknown[]) =>
+        createConsoleProgressReporter(...args),
+      ensureReporterSpecs: (...args: unknown[]) => ensureReporterSpecs(...args),
+      getAdapter: (...args: unknown[]) => getAdapter(...args),
+      isTelemetryEnabled: () => false,
+      listAdapters: vi.fn(),
+      loadAdapterModule: vi.fn(),
+      loadQualityConfig: (...args: unknown[]) => loadQualityConfig(...args),
+      registerBuiltInAdapters: vi.fn(),
+      resetAdapters: vi.fn(),
+      runPipeline: (...args: unknown[]) => runPipeline(...args),
+    }));
+
     runPipeline.mockResolvedValue({ success: true });
     ensureReporterSpecs.mockImplementation((reporters: unknown) => reporters);
     collectFilesForMode.mockResolvedValue([]);
@@ -95,11 +102,12 @@ describe("quality check auto-fix preference", () => {
   });
 
   afterEach(() => {
+    mock.restore();
     vi.clearAllMocks();
   });
 
   it("runs the check pipeline when no subcommand is provided", async () => {
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run([], {
@@ -115,7 +123,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("treats the fix alias as auto-fix + verify", async () => {
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["fix"], {
@@ -139,7 +147,7 @@ describe("quality check auto-fix preference", () => {
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: true },
     });
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check"], {
@@ -163,7 +171,7 @@ describe("quality check auto-fix preference", () => {
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: true },
     });
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check", "--no-auto-fix"], {
@@ -179,7 +187,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("honors the -a alias to enable auto-fix for the run", async () => {
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check", "-a"], {
@@ -203,7 +211,7 @@ describe("quality check auto-fix preference", () => {
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: false },
     });
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check", "--auto-fix"], {
@@ -227,7 +235,7 @@ describe("quality check auto-fix preference", () => {
       ...defaultConfig,
       profile: { ...defaultConfig.profile, autoFix: undefined },
     });
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check"], {
@@ -243,7 +251,7 @@ describe("quality check auto-fix preference", () => {
   });
 
   it("suppresses auto-fix during dry runs even when requested", async () => {
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check", "--auto-fix", "--dry-run"], {
@@ -260,7 +268,7 @@ describe("quality check auto-fix preference", () => {
 
   it("informs the user when auto-fix is requested but no stages support it", async () => {
     getAdapter.mockReturnValue({ supportsModes: ["check"] });
-    const cli = buildCli();
+    const cli = await buildCli();
     const out = capture();
 
     await cli.run(["check", "--auto-fix"], {

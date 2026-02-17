@@ -1,27 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
+import fg from "../../utils/bun-glob";
 import type { ResolvedStage } from "../../config/types";
 import type { FilenameAdapterOptions } from "./filenames";
 import { filenameAdapter } from "./filenames";
-
-type FastGlobFn = (
+type FastGlobSync = (
   source: string | readonly string[],
   options?: object,
 ) => string[];
-
-type FastGlobMock = ReturnType<typeof vi.fn<FastGlobFn>> & {
-  sync: ReturnType<typeof vi.fn<FastGlobFn>>;
-};
-
-vi.mock("fast-glob", () => {
-  const syncMock = vi.fn<FastGlobFn>().mockReturnValue([]);
-  const fn = vi.fn<FastGlobFn>().mockReturnValue([]) as unknown as FastGlobMock;
-  fn.sync = syncMock as FastGlobMock["sync"];
-  return { default: fn };
-});
-
-import fg from "fast-glob";
-
-const fgMock = fg as unknown as FastGlobMock;
 
 const createStage = (
   options: FilenameAdapterOptions = {},
@@ -34,11 +19,19 @@ const createStage = (
 });
 
 describe("filenameAdapter", () => {
+  let syncSpy: ReturnType<typeof vi.fn<FastGlobSync>>;
+
   beforeEach(() => {
-    fgMock.mockClear();
-    fgMock.sync.mockClear();
-    fgMock.mockReturnValue([]);
-    fgMock.sync.mockReturnValue([]);
+    syncSpy = vi.spyOn(
+      fg,
+      "sync",
+    ) as unknown as ReturnType<typeof vi.fn<FastGlobSync>>;
+    syncSpy.mockReset();
+    syncSpy.mockReturnValue([]);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("uses provided files without invoking glob", async () => {
@@ -56,11 +49,11 @@ describe("filenameAdapter", () => {
     });
 
     expect(result.status).toBe("passed");
-    expect(fgMock).not.toHaveBeenCalled();
+    expect(syncSpy).not.toHaveBeenCalled();
   });
 
   it("falls back to globbing when no files are provided", async () => {
-    fgMock.sync.mockReturnValueOnce(["tests/example.unit.spec.ts"]);
+    syncSpy.mockReturnValueOnce(["tests/example.unit.spec.ts"]);
     const stage = createStage();
 
     const result = await filenameAdapter.run({
@@ -75,6 +68,6 @@ describe("filenameAdapter", () => {
     });
 
     expect(result.status).toBe("passed");
-    expect(fgMock.sync).toHaveBeenCalledTimes(1);
+    expect(syncSpy).toHaveBeenCalledTimes(1);
   });
 });

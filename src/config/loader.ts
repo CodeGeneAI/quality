@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../utils/bun-glob";
 import { realpath } from "fs/promises";
 import { parse } from "jsonc-parser";
 import { ensureHooks } from "../pipeline/hooks";

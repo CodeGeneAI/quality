@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import { readJsonFile } from "../../utils/fs";
 import { mergeIgnorePatterns } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";

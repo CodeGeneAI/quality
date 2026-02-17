@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { registerBuiltInAdapters } from "../adapters/register-builtins";
 import { resetAdapters } from "../adapters/registry";
 import { loadQualityConfig } from "../config/loader";

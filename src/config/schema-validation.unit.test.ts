@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { parse } from "jsonc-parser";
 import { extname, join } from "path";
 import { fileURLToPath } from "url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 const schemaPath = fileURLToPath(
   new URL("../../schemas/qualityrc.schema.json", import.meta.url),

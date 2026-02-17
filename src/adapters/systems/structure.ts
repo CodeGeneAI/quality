@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import path from "path";
 import {
   DEFAULT_GLOB_IGNORE,

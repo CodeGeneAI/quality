@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "bun:test";
 import { packageScriptsAdapter } from "./package-scripts";
 
 const createTempWorkspace = async (): Promise<string> =>

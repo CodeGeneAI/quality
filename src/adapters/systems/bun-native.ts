@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../../utils/bun-glob";
 import {
   DEFAULT_GLOB_IGNORE,
   mergeIgnorePatterns,

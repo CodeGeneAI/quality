@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import type { BarrelExportsAdapterOptions } from "./barrel-exports";
 import { barrelExportsAdapter } from "./barrel-exports";
 

@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "fs";
 import os from "os";
 import { join } from "path";
 import { fileURLToPath } from "url";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "bun:test";
 import { loadQualityConfig } from "./loader";
 
 const originalCwd = process.cwd();

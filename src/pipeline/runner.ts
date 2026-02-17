@@ -1,4 +1,4 @@
-import fg from "fast-glob";
+import fg from "../utils/bun-glob";
 import micromatch from "micromatch";
 import { performance } from "perf_hooks";
 import { getAdapter } from "../adapters/registry";
