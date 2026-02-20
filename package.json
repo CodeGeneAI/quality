@@ -31,7 +31,7 @@
   "scripts": {
     "lint": "biome check --write --diagnostic-level=error",
     "typecheck": "bun --bun tsc --noEmit",
-    "test:unit": "bun test ./src",
+    "test:unit": "files=$(find . -type f \\( -name '*.unit.spec.ts' -o -name '*.unit.spec.tsx' -o -name '*.unit.test.ts' -o -name '*.unit.test.tsx' \\)); if [ -n \"$files\" ]; then bun test $files; else echo 'No unit tests found'; fi",
     "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
   },
   "dependencies": {
