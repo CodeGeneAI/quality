@@ -1,0 +1,4 @@
+{
+  "baseBranch": "main",
+  "ignore": ["@fixture/ignored"]
+}

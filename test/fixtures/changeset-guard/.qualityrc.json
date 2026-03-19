@@ -1,0 +1,31 @@
+{
+  "stages": {
+    "changeset-guard": {
+      "presets": {
+        "workspace": {
+          "label": "Changeset requirement check",
+          "alwaysRun": true,
+          "options": {
+            "baseBranch": "main",
+            "includePrivate": true,
+            "severity": "warn",
+            "changedFilePatterns": ["src/**"],
+            "ignoreFilePatterns": ["**/*.test.*", "**/*.spec.*", "**/*.md"]
+          }
+        }
+      }
+    }
+  },
+  "profiles": {
+    "default": {
+      "pipeline": [
+        {
+          "id": "changeset-guard",
+          "type": "changeset-guard",
+          "preset": "workspace"
+        }
+      ],
+      "reporters": ["summary"]
+    }
+  }
+}
