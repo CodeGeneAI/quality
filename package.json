@@ -1,6 +1,6 @@
 {
   "name": "@codegeneai/quality",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "type": "module",
   "description": "Quality tooling (lint, format, hooks) for monorepo workflows",
   "sideEffects": false,

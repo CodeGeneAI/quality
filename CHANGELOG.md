@@ -1,5 +1,11 @@
 # @codegeneai/quality
 
+## 2.1.2
+
+### Patch Changes
+
+- [#841](https://github.com/CodeGeneAI/platform/pull/841) [`4fe2c14`](https://github.com/CodeGeneAI/platform/commit/4fe2c14febdf1e1a34340af876deaedaab0f009f) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Make `changeset-guard` blocking in pre-push, include deleted files when detecting changed packages, and improve missing-changeset guidance with a direct `changeset add` command.
+
 ## 2.1.1
 
 ### Patch Changes
