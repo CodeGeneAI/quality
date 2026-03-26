@@ -700,13 +700,13 @@ const resolveStageFiles = async (
     return cached;
   }
 
+  // fg() already filters by ignorePatterns internally via Bun.Glob + micromatch,
+  // so there is no need to double-filter the results with shouldIgnoreStageFile.
   const globPromise = fg(patterns, {
     cwd: root,
     dot: true,
     ignore: [...ignorePatterns],
-  }).then((matches) =>
-    matches.filter((file) => !shouldIgnoreStageFile(file, ignorePatterns)),
-  );
+  });
 
   if (cache) {
     cache.set(cacheKey, globPromise);

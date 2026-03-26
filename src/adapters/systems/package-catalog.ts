@@ -109,12 +109,18 @@ export const packageCatalogAdapter: StageAdapter<PackageCatalogAdapterOptions> =
       const rewrites: Array<{ path: string; contents: string }> = [];
       const isFix = context.mode === "fix";
 
-      for (const relativePath of packagePaths) {
-        const pkgPath = joinPaths(context.root, relativePath);
-        const pkgJson = await readJsonFile<Record<string, unknown>>(
-          pkgPath,
-        ).catch(() => undefined);
+      // Read all package.json files in parallel
+      const packageEntries = await Promise.all(
+        packagePaths.map(async (relativePath) => {
+          const pkgPath = joinPaths(context.root, relativePath);
+          const pkgJson = await readJsonFile<Record<string, unknown>>(
+            pkgPath,
+          ).catch(() => undefined);
+          return { relativePath, pkgPath, pkgJson };
+        }),
+      );
 
+      for (const { relativePath, pkgPath, pkgJson } of packageEntries) {
         if (!pkgJson || typeof pkgJson !== "object") {
           failures.push(`${relativePath}: unable to read package.json`);
           continue;
@@ -166,9 +172,11 @@ export const packageCatalogAdapter: StageAdapter<PackageCatalogAdapterOptions> =
         }
       }
 
-      for (const rewrite of rewrites) {
-        await writeTextFile(rewrite.path, rewrite.contents);
-      }
+      await Promise.all(
+        rewrites.map((rewrite) =>
+          writeTextFile(rewrite.path, rewrite.contents),
+        ),
+      );
 
       if (failures.length === 0) {
         return { status: "passed" };

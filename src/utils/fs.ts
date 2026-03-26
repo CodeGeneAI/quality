@@ -1,9 +1,11 @@
 import { mkdir, readdir, rm, stat } from "fs/promises";
 
 export const pathExists = async (target: string): Promise<boolean> => {
+  // Bun.file().exists() is ~20x faster than fs.stat() but only works for files.
+  // Try the fast path first, then fall back to stat() for directories.
+  if (await Bun.file(target).exists()) return true;
   try {
-    await stat(target);
-    return true;
+    return (await stat(target)).isDirectory();
   } catch {
     return false;
   }
@@ -21,7 +23,7 @@ export const readTextFile = (filePath: string): Promise<string> =>
   Bun.file(filePath).text();
 
 export const readJsonFile = async <T>(filePath: string): Promise<T> =>
-  JSON.parse(await readTextFile(filePath)) as T;
+  Bun.file(filePath).json() as T;
 
 export const writeTextFile = async (
   filePath: string,

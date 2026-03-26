@@ -42,11 +42,18 @@ export const packageScriptsAdapter: StageAdapter<PackageScriptsAdapterOptions> =
 
       const failures: string[] = [];
 
-      for (const relativePath of packagePaths) {
-        const pkgPath = joinPaths(context.root, relativePath);
-        const pkg = await readJsonFile<Record<string, unknown>>(pkgPath).catch(
-          () => undefined,
-        );
+      // Read all package.json files in parallel
+      const packageEntries = await Promise.all(
+        packagePaths.map(async (relativePath) => {
+          const pkgPath = joinPaths(context.root, relativePath);
+          const pkg = await readJsonFile<Record<string, unknown>>(
+            pkgPath,
+          ).catch(() => undefined);
+          return { relativePath, pkg };
+        }),
+      );
+
+      for (const { relativePath, pkg } of packageEntries) {
         if (!pkg || typeof pkg !== "object") {
           failures.push(`${relativePath}: unable to read package.json`);
           continue;

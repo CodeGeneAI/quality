@@ -264,12 +264,17 @@ export const changesetGuardAdapter: StageAdapter<ChangesetGuardOptions> = {
     const newChangesetFiles = getNewChangesetFiles(changedFiles);
 
     if (newChangesetFiles.length > 0) {
-      // Parse each new changeset to find which packages are covered
+      // Parse all changeset files in parallel
+      const parsedChangesets = await Promise.all(
+        newChangesetFiles.map((csFile) =>
+          parseChangesetPackages(context.root, csFile),
+        ),
+      );
+
       const coveredPackages = new Set<string>();
       let hasEmptyChangeset = false;
 
-      for (const csFile of newChangesetFiles) {
-        const parsed = await parseChangesetPackages(context.root, csFile);
+      for (const parsed of parsedChangesets) {
         if (parsed.isEmpty) {
           // `changeset --empty` is the official opt-out — pass immediately
           hasEmptyChangeset = true;

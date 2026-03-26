@@ -1,8 +1,7 @@
-import { existsSync } from "fs";
 import path from "path";
 import z from "zod";
 import fg from "../../utils/bun-glob";
-import { readJsonFile, writeTextFile } from "../../utils/fs";
+import { pathExists, readJsonFile, writeTextFile } from "../../utils/fs";
 import { mergeIgnorePatterns } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
@@ -178,7 +177,7 @@ const readBiomeConfig = async (
   filePath: string,
 ): Promise<BiomeConfig | undefined> => {
   // Check if file exists first to distinguish missing file from errors
-  if (!existsSync(filePath)) {
+  if (!(await pathExists(filePath))) {
     return undefined;
   }
 
@@ -352,75 +351,79 @@ export const biomeConfigAdapter: StageAdapter<BiomeConfigAdapterOptions> = {
       ignore: [...ignorePatterns],
     });
 
-    const failures: string[] = [];
-    const infos: string[] = [];
+    const results = await Promise.all(
+      packagePaths.map(async (packagePath) => {
+        const workspaceRoot = path.dirname(packagePath);
+        const biomeRelativePath = joinPaths(workspaceRoot, biomeFile);
+        const biomeAbsolutePath = joinPaths(context.root, biomeRelativePath);
+        const failure: string[] = [];
+        const info: string[] = [];
 
-    for (const packagePath of packagePaths) {
-      const workspaceRoot = path.dirname(packagePath);
-      const biomeRelativePath = joinPaths(workspaceRoot, biomeFile);
-      const biomeAbsolutePath = joinPaths(context.root, biomeRelativePath);
+        try {
+          const biomeConfig = await readBiomeConfig(biomeAbsolutePath);
 
-      try {
-        const biomeConfig = await readBiomeConfig(biomeAbsolutePath);
+          if (!biomeConfig) {
+            if (context.mode === "fix") {
+              const template = buildTemplate(
+                options.template,
+                expectedUseImportType,
+              );
+              await writeBiomeConfig(biomeAbsolutePath, template);
+              info.push(
+                `${biomeRelativePath}: created with useImportType '${expectedUseImportType}'`,
+              );
+              return { failure, info };
+            }
 
-        if (!biomeConfig) {
-          // File doesn't exist
-          if (context.mode === "fix") {
-            const template = buildTemplate(
-              options.template,
-              expectedUseImportType,
+            failure.push(
+              formatMissingConfigError(
+                biomeRelativePath,
+                expectedUseImportType,
+              ),
             );
-            await writeBiomeConfig(biomeAbsolutePath, template);
-            infos.push(
-              `${biomeRelativePath}: created with useImportType '${expectedUseImportType}'`,
-            );
-            continue;
+            return { failure, info };
           }
 
-          failures.push(
-            formatMissingConfigError(biomeRelativePath, expectedUseImportType),
+          const { isValid, currentValue } = validateUseImportType(
+            biomeConfig,
+            expectedUseImportType,
           );
-          continue;
-        }
 
-        // Config exists, validate useImportType
-        const { isValid, currentValue } = validateUseImportType(
-          biomeConfig,
-          expectedUseImportType,
-        );
+          if (!isValid) {
+            if (context.mode === "fix") {
+              const updated = updateUseImportType(
+                biomeConfig,
+                expectedUseImportType,
+              );
+              await writeBiomeConfig(biomeAbsolutePath, updated);
+              info.push(
+                `${biomeRelativePath}: set useImportType to '${expectedUseImportType}'`,
+              );
+              return { failure, info };
+            }
 
-        if (!isValid) {
-          if (context.mode === "fix") {
-            const updated = updateUseImportType(
-              biomeConfig,
-              expectedUseImportType,
+            failure.push(
+              formatWrongValueError(
+                biomeRelativePath,
+                expectedUseImportType,
+                currentValue,
+              ),
             );
-            await writeBiomeConfig(biomeAbsolutePath, updated);
-            infos.push(
-              `${biomeRelativePath}: set useImportType to '${expectedUseImportType}'`,
-            );
-            continue;
           }
-
-          failures.push(
-            formatWrongValueError(
-              biomeRelativePath,
-              expectedUseImportType,
-              currentValue,
-            ),
-          );
-        }
-      } catch (error) {
-        // Handle our custom errors with proper messages
-        if (error instanceof BiomeConfigError) {
-          failures.push(`${biomeRelativePath}: ${error.message}`);
-          continue;
+        } catch (error) {
+          if (error instanceof BiomeConfigError) {
+            failure.push(`${biomeRelativePath}: ${error.message}`);
+            return { failure, info };
+          }
+          throw error;
         }
 
-        // Unexpected errors should propagate
-        throw error;
-      }
-    }
+        return { failure, info };
+      }),
+    );
+
+    const failures = results.flatMap((r) => r.failure);
+    const infos = results.flatMap((r) => r.info);
 
     // Determine result based on failures and severity
     if (failures.length === 0) {

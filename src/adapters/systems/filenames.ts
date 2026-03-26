@@ -68,6 +68,9 @@ export const filenameAdapter: StageAdapter<FilenameAdapterOptions> = {
 
     const violations: string[] = [];
     const renameSummaries: string[] = [];
+    const compiledRenameRules = compileRenameRules(
+      options.rename ? Array.from(options.rename) : [],
+    );
 
     for (const file of candidateFiles) {
       if (shouldIgnorePath(file, ignore)) {
@@ -77,12 +80,11 @@ export const filenameAdapter: StageAdapter<FilenameAdapterOptions> = {
         continue;
       }
 
-      const renameRules = options.rename ? Array.from(options.rename) : [];
-      if (context.mode === "fix" && renameRules.length > 0) {
+      if (context.mode === "fix" && compiledRenameRules.length > 0) {
         const renamed = await attemptRename({
           root: context.root,
           file,
-          rules: renameRules,
+          rules: compiledRenameRules,
           patterns,
         });
         if (renamed) {
@@ -91,8 +93,8 @@ export const filenameAdapter: StageAdapter<FilenameAdapterOptions> = {
         }
       }
 
-      const suggestion = renameRules.length
-        ? suggestRename(file, renameRules, patterns)
+      const suggestion = compiledRenameRules.length
+        ? suggestRename(file, compiledRenameRules, patterns)
         : undefined;
       violations.push(
         suggestion
@@ -174,17 +176,29 @@ const resolveCandidateFiles = (
   return matches.filter((file) => !shouldIgnorePath(file, ignorePatterns));
 };
 
+interface CompiledRenameRule {
+  readonly regex: RegExp;
+  readonly replace: string;
+}
+
+const compileRenameRules = (
+  rules: readonly FilenameRenameRule[],
+): CompiledRenameRule[] =>
+  rules.map((rule) => ({
+    regex: new RegExp(rule.match),
+    replace: rule.replace,
+  }));
+
 const suggestRename = (
   file: string,
-  rules: readonly FilenameRenameRule[],
+  rules: readonly CompiledRenameRule[],
   patterns: readonly string[],
 ): string | undefined => {
   for (const rule of rules) {
-    const regex = new RegExp(rule.match);
-    if (!regex.test(file)) {
+    if (!rule.regex.test(file)) {
       continue;
     }
-    const candidate = file.replace(regex, rule.replace);
+    const candidate = file.replace(rule.regex, rule.replace);
     if (candidate !== file && matchesAnyPattern(candidate, patterns)) {
       return candidate;
     }
@@ -200,7 +214,7 @@ const attemptRename = async ({
 }: {
   readonly root: string;
   readonly file: string;
-  readonly rules: readonly FilenameRenameRule[];
+  readonly rules: readonly CompiledRenameRule[];
   readonly patterns: readonly string[];
 }): Promise<string | undefined> => {
   const target = suggestRename(file, rules, patterns);

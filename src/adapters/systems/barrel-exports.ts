@@ -128,53 +128,68 @@ export const barrelExportsAdapter: StageAdapter<BarrelExportsAdapterOptions> = {
     });
 
     const failures: string[] = [];
-    const clientPackages: PackageInfo[] = [];
 
-    // First pass: identify client packages
-    for (const relativePath of packagePaths) {
-      const pkgPath = joinPaths(context.root, relativePath);
-      const pkgJson = await readJsonFile<Record<string, unknown>>(
-        pkgPath,
-      ).catch(() => undefined);
+    // First pass: identify client packages (parallel reads)
+    const packageInfos = await Promise.all(
+      packagePaths.map(async (relativePath) => {
+        const pkgPath = joinPaths(context.root, relativePath);
+        const pkgJson = await readJsonFile<Record<string, unknown>>(
+          pkgPath,
+        ).catch(() => undefined);
 
-      if (!pkgJson || typeof pkgJson !== "object") {
-        continue;
-      }
+        if (!pkgJson || typeof pkgJson !== "object") {
+          return undefined;
+        }
 
-      if (isClientPackage(pkgJson, clientIndicators)) {
-        const pkgName =
-          typeof pkgJson.name === "string" ? pkgJson.name : relativePath;
-        clientPackages.push({
-          name: pkgName,
-          relativePath,
-          packageDir: dirname(relativePath),
-        });
-      }
-    }
+        if (isClientPackage(pkgJson, clientIndicators)) {
+          const pkgName =
+            typeof pkgJson.name === "string" ? pkgJson.name : relativePath;
+          return {
+            name: pkgName,
+            relativePath,
+            packageDir: dirname(relativePath),
+          } satisfies PackageInfo;
+        }
+        return undefined;
+      }),
+    );
+    const clientPackages = packageInfos.filter(
+      (info): info is PackageInfo => info !== undefined,
+    );
 
-    // Second pass: check for barrel exports in client packages
-    for (const pkg of clientPackages) {
-      // Skip ignored packages
-      if (isIgnoredPackage(pkg.name, packageIgnorePatterns)) {
-        continue;
-      }
+    // Second pass: check for barrel exports in client packages (parallel reads)
+    const barrelResults = await Promise.all(
+      clientPackages
+        .filter((pkg) => !isIgnoredPackage(pkg.name, packageIgnorePatterns))
+        .map(async (pkg) => {
+          const indexPath = joinPaths(
+            context.root,
+            pkg.packageDir,
+            "src/index.ts",
+          );
 
-      const indexPath = joinPaths(context.root, pkg.packageDir, "src/index.ts");
+          let indexContent: string;
+          try {
+            indexContent = await readTextFile(indexPath);
+          } catch {
+            // No src/index.ts - that's fine, not a violation
+            return undefined;
+          }
 
-      let indexContent: string;
-      try {
-        indexContent = await readTextFile(indexPath);
-      } catch {
-        // No src/index.ts - that's fine, not a violation
-        continue;
-      }
+          if (hasBarrelExports(indexContent)) {
+            return (
+              `${pkg.name} (${pkg.packageDir}): Client package has barrel exports in src/index.ts. ` +
+              "Use explicit subpath exports in package.json instead to enable tree-shaking. " +
+              "Replace barrel exports with `export {};` and add subpath exports to package.json."
+            );
+          }
+          return undefined;
+        }),
+    );
 
-      if (hasBarrelExports(indexContent)) {
-        failures.push(
-          `${pkg.name} (${pkg.packageDir}): Client package has barrel exports in src/index.ts. ` +
-            "Use explicit subpath exports in package.json instead to enable tree-shaking. " +
-            "Replace barrel exports with `export {};` and add subpath exports to package.json.",
-        );
+    for (const failure of barrelResults) {
+      if (failure) {
+        failures.push(failure);
       }
     }
 
