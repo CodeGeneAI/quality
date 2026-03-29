@@ -40,15 +40,15 @@
     "jsonc-parser": "catalog:tooling",
     "kleur": "catalog:tooling",
     "micromatch": "catalog:tooling",
+    "typescript": "catalog:tooling",
     "zod": "catalog:validation"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:tooling",
     "@codegeneai/typescript-config": "workspace:*",
-    "@types/bun": "catalog:tooling",
-    "@types/diff-match-patch": "catalog:tooling",
-    "@types/micromatch": "catalog:tooling",
-    "typescript": "catalog:tooling",
+    "@types/bun": "catalog:types",
+    "@types/diff-match-patch": "catalog:types",
+    "@types/micromatch": "catalog:types",
     "vitest": "catalog:testing"
   }
 }
