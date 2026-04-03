@@ -249,4 +249,45 @@ describe("dotenv-secrets adapter", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("passes when secret-like keys use computed placeholder values", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeEnvFile(
+        root,
+        "services/assets/.env.preview",
+        [
+          'S3_ACCESS_KEY_ID="${S3_ACCESS_KEY_ID}"',
+          'S3_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY:-}"',
+        ].join("\n"),
+      );
+
+      const result = await runAdapter(root, {
+        files: ["**/.env.preview"],
+      });
+      expect(result.status).toBe("passed");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("fails when placeholder syntax is malformed", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeEnvFile(
+        root,
+        "services/assets/.env.preview",
+        'S3_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY:default}"',
+      );
+
+      const result = await runAdapter(root, {
+        files: ["**/.env.preview"],
+      });
+      expect(result.status).toBe("failed");
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages![0]).toContain("S3_SECRET_ACCESS_KEY");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

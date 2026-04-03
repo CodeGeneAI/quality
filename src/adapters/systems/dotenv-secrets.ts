@@ -31,11 +31,7 @@ const DEFAULT_FILES = [
   "**/.env.preview",
 ];
 
-const DEFAULT_PLAINTEXT_ALLOWLIST = [
-  "APP_ENV",
-  "NODE_ENV",
-  "OAUTH2_PROXY_GITHUB_ORG",
-];
+const DEFAULT_PLAINTEXT_ALLOWLIST = ["APP_ENV", "NODE_ENV"];
 
 const DEFAULT_SECRET_KEY_PATTERNS = [
   "SECRET",
@@ -50,6 +46,7 @@ const DEFAULT_SECRET_KEY_PATTERNS = [
 const NODE_MODULES_IGNORE = ["**/node_modules/**"] as const;
 const ENCRYPTED_PREFIX = "encrypted:";
 const DOTENV_PUBLIC_KEY_PREFIX = "DOTENV_PUBLIC_KEY";
+const COMPUTED_ENV_VALUE_PATTERN = /^\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}$/;
 
 interface EnvEntry {
   readonly key: string;
@@ -103,6 +100,10 @@ function matchesSecretPattern(
 ): boolean {
   const upper = key.toUpperCase();
   return patterns.some((pattern) => upper.includes(pattern.toUpperCase()));
+}
+
+function isComputedEnvValue(value: string): boolean {
+  return COMPUTED_ENV_VALUE_PATTERN.test(value);
 }
 
 export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
@@ -164,6 +165,11 @@ export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
 
           // Skip explicitly allowlisted keys
           if (isPlaintextAllowed(entry.key, allowlist)) {
+            continue;
+          }
+
+          // Skip values that are runtime-computed placeholders.
+          if (isComputedEnvValue(entry.value)) {
             continue;
           }
 
