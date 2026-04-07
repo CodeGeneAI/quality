@@ -21,6 +21,8 @@ const git = async (root: string, ...args: string[]) => {
       GIT_AUTHOR_EMAIL: "test@test.com",
       GIT_COMMITTER_NAME: "test",
       GIT_COMMITTER_EMAIL: "test@test.com",
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_SYSTEM: "/dev/null",
     },
   });
   if (result.exitCode !== 0) {
