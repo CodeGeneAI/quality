@@ -2,6 +2,6 @@
   "name": "quality-fixture-presets",
   "private": true,
   "scripts": {
-    "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
+    "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
   }
 }

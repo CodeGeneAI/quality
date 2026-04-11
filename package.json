@@ -32,7 +32,7 @@
     "lint": "biome check --write --diagnostic-level=error",
     "typecheck": "bun x tsgo --noEmit",
     "test:unit": "files=$(find . -type f \\( -name '*.unit.spec.ts' -o -name '*.unit.spec.tsx' -o -name '*.unit.test.ts' -o -name '*.unit.test.tsx' \\)); if [ -n \"$files\" ]; then bun test $files; else echo 'No unit tests found'; fi",
-    "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache .vitest node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
+    "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
   },
   "dependencies": {
     "clipanion": "catalog:cli",
@@ -48,7 +48,6 @@
     "@codegeneai/typescript-config": "workspace:*",
     "@types/bun": "catalog:types",
     "@types/diff-match-patch": "catalog:types",
-    "@types/micromatch": "catalog:types",
-    "vitest": "catalog:testing"
+    "@types/micromatch": "catalog:types"
   }
 }

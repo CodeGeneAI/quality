@@ -48,7 +48,7 @@ export interface StagePresetSpec {
 }
 
 export interface StageOutputOptions {
-  readonly preset?: "vitest" | "playwright" | "turbo";
+  readonly preset?: "bun-test" | "playwright" | "turbo";
   readonly mode?: "passthrough" | "errors-only";
   readonly include?: readonly string[];
   readonly exclude?: readonly string[];

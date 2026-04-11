@@ -5,8 +5,8 @@ import {
   commandOutputFilterPresets,
 } from "./command-output-filter";
 
-const sampleVitestLog = `
- RUN  v4.0.6 /repo
+const sampleBunTestLog = `
+ bun test v1.3.11 (af24e281)
  
  ✓ pkg/a.spec.ts (2)
  ✓ pkg/b.spec.ts (1)
@@ -37,9 +37,9 @@ describe("CommandOutputFilter", () => {
     ]);
   });
 
-  it("applies vitest preset rules", () => {
-    const filter = buildFilterFromPreset("vitest");
-    filter.addChunk("stderr", sampleVitestLog);
+  it("applies bun-test preset rules", () => {
+    const filter = buildFilterFromPreset("bun-test");
+    filter.addChunk("stderr", sampleBunTestLog);
     filter.finalize();
 
     const filtered = filter.getFilteredLines().map((line) => line.text.trim());
@@ -49,6 +49,6 @@ describe("CommandOutputFilter", () => {
       "AssertionError: expected true to be false",
       "at Object.<anonymous> (pkg/c.spec.ts:10:5)",
     ]);
-    expect(commandOutputFilterPresets.vitest.mode).toBe("errors-only");
+    expect(commandOutputFilterPresets["bun-test"].mode).toBe("errors-only");
   });
 });

@@ -662,7 +662,7 @@
       "properties": {
         "preset": {
           "type": "string",
-          "enum": ["vitest", "playwright", "turbo"]
+          "enum": ["bun-test", "playwright", "turbo"]
         },
         "mode": { "type": "string", "enum": ["passthrough", "errors-only"] },
         "include": {

@@ -2,7 +2,7 @@ import { escapeRegExp } from "./string";
 
 export type CommandOutputSource = "stdout" | "stderr";
 
-export type CommandOutputFilterPreset = "vitest" | "playwright" | "turbo";
+export type CommandOutputFilterPreset = "bun-test" | "playwright" | "turbo";
 
 export interface CommandOutputFilterConfig {
   readonly mode?: "passthrough" | "errors-only";
@@ -98,7 +98,7 @@ export const commandOutputFilterPresets: Record<
   CommandOutputFilterPreset,
   CommandOutputFilterConfig
 > = {
-  vitest: {
+  "bun-test": {
     mode: "errors-only",
     include: [
       /^\s*(FAIL|✖|✗|×|ERR)/i,

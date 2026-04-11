@@ -217,7 +217,7 @@ describe("commandAdapter", () => {
         },
       ],
       output: {
-        preset: "vitest",
+        preset: "bun-test",
         showOnSuccess: "none",
       },
     });
@@ -246,7 +246,7 @@ describe("commandAdapter", () => {
         },
       ],
       output: {
-        preset: "vitest",
+        preset: "bun-test",
         showOnFailure: "filtered",
       },
     });

@@ -36,7 +36,7 @@ const DEFAULT_IGNORE_FILE_PATTERNS = [
   "**/.qualityrc*",
   "**/biome.json",
   "**/tsconfig*.json",
-  "**/vitest.config.*",
+  "**/bunfig.toml",
 ];
 
 const getCurrentBranch = async (root: string): Promise<string> => {

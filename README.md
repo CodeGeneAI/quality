@@ -243,13 +243,13 @@ File globs declared under `files` are resolved asynchronously and cached per pat
 | `shell` | Whether to execute through the shell (`true`, `false`, or shell binary). Shell strings default to `shell: true`. |
 | `timeoutMs` | Per-command timeout. |
 | `abortPipelineOnFailure` | When `false`, the stage inherits `continueOnError: true` so downstream stages continue. |
-| `output` | Optional object that enables quiet logging. Supports `preset` (`vitest`, `playwright`, `turbo`), `mode` (`passthrough` or `errors-only`), pattern overrides, and `showOnSuccess`/`showOnFailure` toggles. |
+| `output` | Optional object that enables quiet logging. Supports `preset` (`bun-test`, `playwright`, `turbo`), `mode` (`passthrough` or `errors-only`), pattern overrides, and `showOnSuccess`/`showOnFailure` toggles. |
 
 The adapter collects stdout/stderr per command, respects pipeline abort signals, and reports timeouts with structured details.
 
 When `output` is configured the adapter streams stdout/stderr through the
 command-output filter and only emits the filtered lines (for example, failing
-Vitest assertions). Passing stages can suppress logs entirely by setting
+bun:test assertions). Passing stages can suppress logs entirely by setting
 `showOnSuccess: "none"`, keeping `quality check` output tight even when the
 underlying command is noisy. Set `QUALITY_SHOW_ALL_OUTPUT=1` or pass
 `--show-command-output` to the CLI to bypass filtering for a given run.
