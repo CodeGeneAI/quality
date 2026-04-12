@@ -177,7 +177,7 @@ export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
           if (matchesSecretPattern(entry.key, secretPatterns)) {
             failures.push(
               `${relativePath}:${entry.line}: "${entry.key}" looks like a secret but is not encrypted. ` +
-                `Use \`bun env:set ${entry.key} "<value>" --service <name> --env <env>\` to encrypt it, ` +
+                `Use \`dotenvx set ${entry.key} "<value>" -fk .env.keys -f ${relativePath}\` to encrypt it, ` +
                 "or add it to the plaintextAllowlist if it is not sensitive.",
             );
           }
