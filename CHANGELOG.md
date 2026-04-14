@@ -1,5 +1,11 @@
 # @codegeneai/quality
 
+## 2.1.3
+
+### Patch Changes
+
+- [#979](https://github.com/CodeGeneAI/platform/pull/979) [`d05be3b`](https://github.com/CodeGeneAI/platform/commit/d05be3b23f19821df10358dfdcd089d88adffd34) Thanks [@rszemplinski](https://github.com/rszemplinski)! - Improvements and optimizations
+
 ## 2.1.2
 
 ### Patch Changes
