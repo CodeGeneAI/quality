@@ -255,7 +255,7 @@ describe("dotenv-secrets adapter", () => {
     try {
       await writeEnvFile(
         root,
-        "services/assets/.env.preview",
+        "services/auth/.env.preview",
         [
           'S3_ACCESS_KEY_ID="${S3_ACCESS_KEY_ID}"',
           'S3_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY:-}"',
@@ -276,7 +276,7 @@ describe("dotenv-secrets adapter", () => {
     try {
       await writeEnvFile(
         root,
-        "services/assets/.env.preview",
+        "services/auth/.env.preview",
         'S3_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY:default}"',
       );
 
