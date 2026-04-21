@@ -164,8 +164,6 @@ const formatWarningMessages = (
   messages.push(
     'Quick add:  bun x changeset add --message "Describe your change"',
   );
-  messages.push("To skip:    bun x changeset --empty");
-  messages.push("To bypass:  git push --no-verify");
   return messages;
 };
 

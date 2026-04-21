@@ -449,9 +449,9 @@ describe("changesetGuardAdapter", () => {
       });
 
       const allMessages = (result.messages ?? []).join("\n");
-      expect(allMessages).toContain("changeset");
-      expect(allMessages).toContain("--empty");
-      expect(allMessages).toContain("--no-verify");
+      expect(allMessages).toContain("bun x changeset add");
+      expect(allMessages).not.toContain("--empty");
+      expect(allMessages).not.toContain("--no-verify");
     });
   });
 
