@@ -1,5 +1,11 @@
 # @codegeneai/quality
 
+## 2.1.4
+
+### Patch Changes
+
+- [#1119](https://github.com/CodeGeneAI/platform/pull/1119) [`e0d8ae8`](https://github.com/CodeGeneAI/platform/commit/e0d8ae8e1f84f5d879d4566c9b0472f03b109ce5) Thanks [@rszemplinski](https://github.com/rszemplinski)! - changeset-guard: stop surfacing `bun x changeset --empty` and `git push --no-verify` in warning output so the skip/bypass escape hatches are no longer advertised to contributors. The empty-changeset opt-out still functions internally; only the message is removed.
+
 ## 2.1.3
 
 ### Patch Changes
