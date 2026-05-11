@@ -1,4 +1,9 @@
 import fg from "../../utils/bun-glob";
+import {
+  ENCRYPTED_PREFIX,
+  isComputedEnvValue,
+  parseEnvFile,
+} from "../../utils/dotenv-parse";
 import { readTextFile } from "../../utils/fs";
 import { mergeIgnorePatterns } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
@@ -44,48 +49,7 @@ const DEFAULT_SECRET_KEY_PATTERNS = [
 ];
 
 const NODE_MODULES_IGNORE = ["**/node_modules/**"] as const;
-const ENCRYPTED_PREFIX = "encrypted:";
 const DOTENV_PUBLIC_KEY_PREFIX = "DOTENV_PUBLIC_KEY";
-const COMPUTED_ENV_VALUE_PATTERN = /^\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}$/;
-
-interface EnvEntry {
-  readonly key: string;
-  readonly value: string;
-  readonly line: number;
-}
-
-function parseEnvFile(content: string): readonly EnvEntry[] {
-  const entries: EnvEntry[] = [];
-
-  const lines = content.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-
-    if (!line || line.startsWith("#")) {
-      continue;
-    }
-
-    const eqIndex = line.indexOf("=");
-    if (eqIndex === -1) {
-      continue;
-    }
-
-    const key = line.slice(0, eqIndex).trim();
-    let value = line.slice(eqIndex + 1).trim();
-
-    // Strip surrounding quotes
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-
-    entries.push({ key, value, line: i + 1 });
-  }
-
-  return entries;
-}
 
 function isPlaintextAllowed(
   key: string,
@@ -100,10 +64,6 @@ function matchesSecretPattern(
 ): boolean {
   const upper = key.toUpperCase();
   return patterns.some((pattern) => upper.includes(pattern.toUpperCase()));
-}
-
-function isComputedEnvValue(value: string): boolean {
-  return COMPUTED_ENV_VALUE_PATTERN.test(value);
 }
 
 export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
