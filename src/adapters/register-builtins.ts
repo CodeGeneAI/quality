@@ -5,6 +5,7 @@ import { biomeIgnoreAdapter } from "./systems/biome-ignore";
 import { bunNativeAdapter } from "./systems/bun-native";
 import { changesetGuardAdapter } from "./systems/changeset-guard";
 import { commandAdapter } from "./systems/command";
+import { dockerfileRequiredAdapter } from "./systems/dockerfile-required";
 import { dotenvPlaintextAdapter } from "./systems/dotenv-plaintext";
 import { dotenvSecretsAdapter } from "./systems/dotenv-secrets";
 import { filenameAdapter } from "./systems/filenames";
@@ -24,6 +25,7 @@ export const registerBuiltInAdapters = (): void => {
     changesetGuardAdapter,
     dotenvSecretsAdapter,
     dotenvPlaintextAdapter,
+    dockerfileRequiredAdapter,
     filenameAdapter,
     structureAdapter,
     unitAdjacencyAdapter,

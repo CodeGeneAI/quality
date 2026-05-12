@@ -6,6 +6,18 @@ export {
   resetAdapters,
 } from "./adapters/registry";
 export type {
+  DockerfileRequiredAdapterOptions,
+  IDockerfileTargetSource,
+  ResolvedDockerfileOptions,
+} from "./adapters/systems/dockerfile-required";
+export {
+  createDefaultDockerfileTargetSources,
+  createDockerfileRequiredAdapter,
+  dockerfileRequiredAdapter,
+  ExplicitPathTargetSource,
+  PackageGlobTargetSource,
+} from "./adapters/systems/dockerfile-required";
+export type {
   StageAdapter,
   StageAdapterModuleExport,
   StageExecutionContext,

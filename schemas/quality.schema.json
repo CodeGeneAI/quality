@@ -41,6 +41,9 @@
         },
         "barrel-exports": {
           "$ref": "#/specs/adapterPresetCatalogBarrelExports"
+        },
+        "dockerfile-required": {
+          "$ref": "#/specs/adapterPresetCatalogDockerfileRequired"
         }
       },
       "additionalProperties": {
@@ -382,6 +385,19 @@
         }
       ]
     },
+    "stagePresetDockerfileRequired": {
+      "allOf": [
+        { "$ref": "#/specs/stagePresetBase" },
+        {
+          "type": "object",
+          "properties": {
+            "options": {
+              "$ref": "#/specs/adapterOptionsDockerfileRequired"
+            }
+          }
+        }
+      ]
+    },
     "stageBase": {
       "type": "object",
       "required": ["id", "type"],
@@ -522,6 +538,18 @@
                   }
                 }
               }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "dockerfile-required" } }
+              },
+              "then": {
+                "properties": {
+                  "overrides": {
+                    "$ref": "#/specs/adapterOptionsDockerfileRequired"
+                  }
+                }
+              }
             }
           ]
         }
@@ -649,6 +677,39 @@
           "additionalProperties": {
             "$ref": "#/specs/stagePresetBarrelExports"
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterPresetCatalogDockerfileRequired": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/specs/stagePresetDockerfileRequired"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapterOptionsDockerfileRequired": {
+      "type": "object",
+      "description": "Options for the dockerfile-required adapter.",
+      "properties": {
+        "packageGlobs": {
+          "type": "array",
+          "description": "Directory globs whose package.json-bearing descendants must each ship a Dockerfile. Defaults to [\"apps/*\", \"services/*\"].",
+          "items": { "type": "string" }
+        },
+        "extraRequiredPaths": {
+          "type": "array",
+          "description": "Workspace-relative directories that must contain a Dockerfile even when not matched by packageGlobs (e.g., \"packages/ui\").",
+          "items": { "type": "string" }
+        },
+        "filename": {
+          "type": "string",
+          "description": "Required filename inside each target directory. Defaults to \"Dockerfile\"."
         }
       },
       "additionalProperties": false
