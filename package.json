@@ -2,16 +2,32 @@
   "name": "@codegeneai/quality",
   "version": "2.1.4",
   "type": "module",
-  "description": "Quality tooling (lint, format, hooks) for monorepo workflows",
-  "sideEffects": false,
+  "license": "MIT",
+  "description": "Declarative quality pipeline (lint, format, hooks) with composable stage adapters for monorepo workflows",
+  "keywords": [
+    "quality",
+    "lint",
+    "biome",
+    "monorepo",
+    "ci",
+    "pipeline",
+    "adapters",
+    "hooks",
+    "bun",
+    "cli"
+  ],
+  "homepage": "https://github.com/CodeGeneAI/quality#readme",
+  "bugs": {
+    "url": "https://github.com/CodeGeneAI/quality/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CodeGeneAI/platform.git",
-    "directory": "packages/quality"
+    "url": "https://github.com/CodeGeneAI/quality.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+  "packageManager": "bun@1.3.14",
+  "sideEffects": false,
+  "bin": {
+    "quality": "./src/bin.ts"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -19,35 +35,41 @@
     "./schemas/qualityrc.schema.json": "./schemas/qualityrc.schema.json",
     "./schemas/quality.schema.json": "./schemas/quality.schema.json"
   },
-  "bin": {
-    "quality": "./src/bin.ts"
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
   },
   "files": [
     "src",
     "schemas",
-    "README.md",
-    "AGENTS.md"
+    "README.md"
   ],
   "scripts": {
+    "start": "bun src/bin.ts",
     "lint": "biome check --write --diagnostic-level=error",
     "typecheck": "bun x tsgo --noEmit",
     "test:unit": "files=$(find . -type f \\( -name '*.unit.spec.ts' -o -name '*.unit.spec.tsx' -o -name '*.unit.test.ts' -o -name '*.unit.test.tsx' \\)); if [ -n \"$files\" ]; then bun test $files; else echo 'No unit tests found'; fi",
+    "prepublishOnly": "bun run typecheck && bun run test:unit",
     "clean": "rm -rf dist build lib out coverage .nyc_output .turbo .vite .cache node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo tmp temp"
   },
   "dependencies": {
-    "clipanion": "catalog:cli",
-    "diff-match-patch": "catalog:tooling",
-    "jsonc-parser": "catalog:tooling",
-    "kleur": "catalog:tooling",
-    "micromatch": "catalog:tooling",
-    "typescript": "catalog:tooling",
-    "zod": "catalog:validation"
+    "clipanion": "4.0.0-rc.4",
+    "diff-match-patch": "1.0.5",
+    "jsonc-parser": "3.3.1",
+    "kleur": "4.1.5",
+    "micromatch": "4.0.8",
+    "typescript": "6.0.3",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:tooling",
-    "@codegeneai/typescript-config": "workspace:*",
-    "@types/bun": "catalog:types",
-    "@types/diff-match-patch": "catalog:types",
-    "@types/micromatch": "catalog:types"
+    "@biomejs/biome": "2.4.15",
+    "@types/bun": "1.3.14",
+    "@types/diff-match-patch": "1.0.36",
+    "@types/micromatch": "4.0.10",
+    "@typescript/native-preview": "7.0.0-dev.20260510.1",
+    "ajv": "8.20.0"
   }
 }

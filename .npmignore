@@ -1,34 +1,49 @@
-# Files and directories that should never be published
-node_modules
-.DS_Store
-*.log
-*.tsbuildinfo
-bun.lock*
-bunfig.toml
-.vscode/
-.idea/
-.turbo/
-.vitest/
-.cache/
-coverage/
-.nyc_output/
-.tmp/
-tmp/
-temp/
-
-# Tests
+# Test and fixture files (not needed at runtime)
+**/*.unit.test.ts
+**/*.unit.test.tsx
+**/*.unit.spec.ts
+**/*.unit.spec.tsx
+**/*.int.test.ts
+**/*.int.spec.ts
+**/*.test.helpers.ts
+**/__fixtures__/
+**/__snapshots__/
 test/
 tests/
 __tests__/
-**/*.unit.spec.*
-**/*.unit.test.*
-**/*.integration.spec.*
-**/*.integration.test.*
-**/*.int.spec.*
-**/*.int.test.*
-**/*.browser.spec.*
-**/*.browser.test.*
-**/*.smoke.spec.*
-**/*.smoke.test.*
-**/*.visual.spec.*
-**/*.visual.test.*
+
+# Build artifacts and caches
+dist/
+tsconfig.json
+tsconfig.tsbuildinfo
+.turbo/
+node_modules/
+coverage/
+.cache/
+tmp/
+temp/
+
+# Editor / OS cruft
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Repo tooling / CI / release infra (not useful to consumers)
+.github/
+.release-please-config.json
+.release-please-manifest.json
+bun.lock
+.gitignore
+.npmignore
+.agents/
+.codex/
+docs/
+bench/
+
+# Agent / workspace guidance (not useful to consumers)
+AGENTS.md
+CLAUDE.md
+
+# Local lint configs
+biome.json
