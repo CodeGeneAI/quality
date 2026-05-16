@@ -14,6 +14,13 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Nightly preview build of the TypeScript native compiler (tsgo).
+      # Each "update" is just a new date suffix on the same major.minor.
+      # Tracking these would mean a weekly Dependabot PR with no semantic
+      # change. Bump manually when there's a reason to move to a newer
+      # nightly (e.g. a tsgo bugfix).
+      - dependency-name: "@typescript/native-preview"
 
   - package-ecosystem: github-actions
     directory: /
