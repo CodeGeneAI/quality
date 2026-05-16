@@ -265,15 +265,129 @@ concurrency vs. configured `parallelLimit`). Useful for diagnosing
 
 ## Dockerfile-required adapter (extension hooks)
 
-The `dockerfile-required` adapter exposes its own building blocks for
-projects that need to customize how target directories are detected.
+The `dockerfile-required` adapter asserts every runnable workload
+(every `apps/*` and `services/*` package, plus any explicit
+`extraRequiredPaths`) ships a `Dockerfile`. It exposes its own
+building blocks so projects can plug in a custom enumeration of
+which directories must own an image contract.
 
-- `DockerfileRequiredAdapterOptions`, `ResolvedDockerfileOptions` — option shapes.
-- `IDockerfileTargetSource` — interface for plugging in a custom enumeration of directories that must contain a `Dockerfile`.
-- `createDockerfileRequiredAdapter(options)` — factory that returns a configured `StageAdapter`.
-- `dockerfileRequiredAdapter` — the default registered adapter.
-- `createDefaultDockerfileTargetSources(options)` — convenience for re-using the default `packages/*` enumeration with custom additions.
-- `ExplicitPathTargetSource`, `PackageGlobTargetSource` — concrete `IDockerfileTargetSource` implementations.
+### `DockerfileRequiredAdapterOptions`
+
+The option shape consumed by `createDockerfileRequiredAdapter` and
+accepted by the default adapter at `pipeline[].options`. All fields
+are optional.
+
+```ts
+interface DockerfileRequiredAdapterOptions {
+  /** Directory globs whose package.json-bearing descendants must ship a Dockerfile. Default: ["apps/*", "services/*"]. */
+  readonly packageGlobs?: readonly string[];
+  /** Additional directories that must contain a Dockerfile even though they are not picked up by packageGlobs. */
+  readonly extraRequiredPaths?: readonly string[];
+  /** Required filename inside each target directory. Default: "Dockerfile". */
+  readonly filename?: string;
+}
+```
+
+### `ResolvedDockerfileOptions`
+
+The normalized form of `DockerfileRequiredAdapterOptions` after
+defaults are applied. Passed to every `IDockerfileTargetSource` so
+custom sources never have to re-derive defaults.
+
+```ts
+interface ResolvedDockerfileOptions {
+  readonly packageGlobs: readonly string[];
+  readonly extraRequiredPaths: readonly string[];
+  readonly filename: string;
+}
+```
+
+### `IDockerfileTargetSource`
+
+The extension point. Implement this interface to add a new strategy
+for discovering directories that must contain a `Dockerfile`. The
+adapter dedupes paths across all registered sources before checking
+the filesystem.
+
+```ts
+interface IDockerfileTargetSource {
+  readonly id: string;
+  collect(
+    root: string,
+    options: ResolvedDockerfileOptions,
+    ignorePatterns: readonly string[],
+  ): Promise<readonly string[]>;
+}
+```
+
+### `PackageGlobTargetSource`
+
+Default source that expands `packageGlobs` to their
+`package.json`-bearing directories. Respects the adapter's
+`ignorePatterns` (so common ignores like `node_modules` are excluded
+automatically).
+
+### `ExplicitPathTargetSource`
+
+Default source that returns `extraRequiredPaths` verbatim.
+Intentionally does **not** consult `ignorePatterns` — user-declared
+required paths are requirements, not discovered candidates, so they
+are never silently dropped.
+
+### `createDefaultDockerfileTargetSources()`
+
+Returns the two default sources (`PackageGlobTargetSource` then
+`ExplicitPathTargetSource`) as a fresh array. Useful when you want
+to compose custom sources alongside the defaults.
+
+```ts
+import {
+  createDefaultDockerfileTargetSources,
+  createDockerfileRequiredAdapter,
+  type IDockerfileTargetSource,
+} from "@codegeneai/quality";
+
+const customSource: IDockerfileTargetSource = {
+  id: "infra-modules",
+  async collect() {
+    return ["infra/migrator", "infra/scheduler"];
+  },
+};
+
+const adapter = createDockerfileRequiredAdapter([
+  ...createDefaultDockerfileTargetSources(),
+  customSource,
+]);
+```
+
+### `createDockerfileRequiredAdapter(sources?)`
+
+Factory that returns a configured `StageAdapter<DockerfileRequiredAdapterOptions>`.
+Pass a custom array of `IDockerfileTargetSource`s to replace the
+defaults entirely, or omit the argument to use
+`createDefaultDockerfileTargetSources()`.
+
+```ts
+import { createDockerfileRequiredAdapter } from "@codegeneai/quality";
+
+// Default behavior, explicit factory call.
+const adapter = createDockerfileRequiredAdapter();
+```
+
+### `dockerfileRequiredAdapter`
+
+The default registered adapter — equivalent to calling
+`createDockerfileRequiredAdapter()` with no arguments. This is what
+`registerBuiltInAdapters()` wires up under the
+`"dockerfile-required"` type, so most projects do not need to
+reference it directly.
+
+```ts
+import { dockerfileRequiredAdapter } from "@codegeneai/quality";
+
+// type === "dockerfile-required"
+console.log(dockerfileRequiredAdapter.type);
+```
 
 Use the factory when you want a tailored variant; use the default
 adapter when the built-in behavior is enough.
