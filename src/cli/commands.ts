@@ -495,29 +495,8 @@ export class QualityInitCommand extends Command {
     }
     const stack = JSON.stringify(
       {
-        $schema: "./packages/quality/schemas/qualityrc.schema.json",
-        stages: {
-          command: {
-            presets: {
-              "docs:check": {
-                label: "Docs lint",
-                description:
-                  "Runs documentation linting without blocking the pipeline",
-                continueOnError: true,
-                options: {
-                  abortPipelineOnFailure: false,
-                  commands: [
-                    {
-                      command: ["bun", "run", "docs:lint"],
-                      label: "docs:lint",
-                      continueOnError: true,
-                    },
-                  ],
-                },
-              },
-            },
-          },
-        },
+        $schema:
+          "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
         profiles: {
           local: {
             pipeline: [
@@ -539,11 +518,6 @@ export class QualityInitCommand extends Command {
               {
                 id: "lint:structure",
                 type: "structure",
-              },
-              {
-                id: "docs:check",
-                type: "command",
-                preset: "docs:check",
               },
             ],
             reporters: ["summary"],
