@@ -1,0 +1,64 @@
+{
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
+
+  // Shared profile that local dev runs by default (e.g. `bun x quality check`).
+  // The other two profiles inherit from this one and tighten or loosen the
+  // pipeline depending on the git hook that fires them.
+  "profiles": {
+    "local": {
+      "pipeline": [
+        { "id": "lint:bun-native", "type": "bun-native" },
+        { "id": "lint:filenames", "type": "filenames" },
+        { "id": "lint:imports", "type": "imports" },
+        { "id": "lint:unit-adjacency", "type": "unit-adjacency" }
+      ],
+      "reporters": ["summary"]
+    },
+
+    // Wired from Husky's .husky/pre-commit:
+    //   bun x quality check --profile pre-commit --files-mode staged
+    //
+    // - `pipelineStrategy: replace` discards the inherited pipeline so this
+    //   profile only runs the fast, fixable subset.
+    // - `autoFix: true` lets fixable stages rewrite files before verification,
+    //   so devs don't bounce off a commit just to add a missing import ext.
+    "pre-commit": {
+      "extends": "local",
+      "pipelineStrategy": "replace",
+      "autoFix": true,
+      "filesMode": "staged",
+      "pipeline": [
+        { "id": "lint:bun-native", "type": "bun-native" },
+        { "id": "lint:filenames", "type": "filenames" }
+      ]
+    },
+
+    // Wired from Husky's .husky/pre-push:
+    //   bun x quality check --profile pre-push
+    //
+    // Heavier checks that you don't want on every keystroke: full typecheck
+    // and adjacency rules. `extends: local` appends these after the inherited
+    // pipeline (pipelineStrategy defaults to `append`).
+    "pre-push": {
+      "extends": "local",
+      "pipeline": [
+        { "id": "lint:unit-adjacency", "type": "unit-adjacency" },
+        { "id": "lint:imports", "type": "imports" },
+        {
+          "id": "typecheck",
+          "type": "command",
+          "alwaysRun": true,
+          "overrides": {
+            "commands": [
+              {
+                "command": ["bun", "x", "tsgo", "--noEmit"],
+                "label": "tsgo --noEmit",
+                "timeoutMs": 120000
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

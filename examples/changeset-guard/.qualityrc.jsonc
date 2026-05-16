@@ -1,0 +1,73 @@
+{
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
+
+  // Release-discipline guard for a monorepo using @changesets/cli.
+  // The adapter diffs the current branch against `baseBranch`, maps each
+  // changed file to its workspace package, then checks whether any new
+  // .changeset/*.md file actually covers those packages.
+  "stages": {
+    "changeset-guard": {
+      "presets": {
+        "workspace": {
+          "label": "Changeset requirement check",
+          "alwaysRun": true,
+          "options": {
+            // Compare against the trunk. Use `origin/main` in CI to avoid
+            // depending on a stale local ref.
+            "baseBranch": "main",
+
+            // `false` would skip private workspace packages. For a single-
+            // repo team where every package can ship, `true` keeps the
+            // guard honest across the whole graph.
+            "includePrivate": true,
+
+            // "warn" reports missing changesets but lets the pipeline pass;
+            // switch to "fail" once the team is comfortable with the workflow.
+            "severity": "warn",
+
+            // Only consider source paths as "release-worthy" changes.
+            // README edits, test fixtures, and config tweaks don't trigger.
+            "changedFilePatterns": ["src/**"],
+            "ignoreFilePatterns": [
+              "**/*.test.*",
+              "**/*.spec.*",
+              "**/test/**",
+              "**/__tests__/**",
+              "**/*.md"
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "changeset-guard",
+          "type": "changeset-guard",
+          "preset": "workspace"
+        }
+      ],
+      "reporters": ["summary"]
+    },
+
+    // CI tightens the screws: same adapter, but `severity: fail` blocks
+    // the merge if a changed package is missing its changeset.
+    "ci": {
+      "extends": "local",
+      "pipeline": [
+        {
+          "id": "changeset-guard",
+          "type": "changeset-guard",
+          "preset": "workspace",
+          "overrides": {
+            "baseBranch": "origin/main",
+            "severity": "fail"
+          }
+        }
+      ]
+    }
+  }
+}

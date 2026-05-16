@@ -1,0 +1,36 @@
+{
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
+
+  // Point at one or more local TypeScript files that export a StageAdapter.
+  // The loader accepts relative paths (resolved from this config file) and
+  // bare module specifiers (e.g. "@your-org/quality-rules").
+  "adapters": ["./custom-adapter.ts"],
+
+  // Each adapter registers itself by `type`. Once registered you can use
+  // it in `stages` and `pipeline` exactly like any built-in adapter.
+  "stages": {
+    "greet": {
+      "presets": {
+        "default": {
+          "label": "Greet preset",
+          "description": "Runs the local greet adapter",
+          "options": { "name": "world" }
+        }
+      }
+    }
+  },
+
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "custom:greet",
+          "type": "greet",
+          "preset": "default",
+          "overrides": { "name": "teammate" }
+        }
+      ],
+      "reporters": ["summary"]
+    }
+  }
+}

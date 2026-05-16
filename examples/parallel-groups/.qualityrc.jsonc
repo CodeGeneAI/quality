@@ -1,0 +1,58 @@
+{
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
+
+  // Two groups: one runs three cheap structural lints in parallel, the
+  // other runs a single slow command serially. Both are part of the same
+  // pipeline — the runner just respects the `group` metadata when it
+  // decides what can fan out and what has to wait its turn.
+  "profiles": {
+    "local": {
+      "pipeline": [
+        // ── Group `fast` ────────────────────────────────────────────────
+        // All three stages share `{ id: "fast", parallel: true, failFast: true }`.
+        // The runner starts them concurrently; if any one fails, the others
+        // are signalled to abort (fail-fast) and the next group never starts.
+        {
+          "id": "lint:bun-native",
+          "type": "bun-native",
+          "group": { "id": "fast", "parallel": true, "failFast": true }
+        },
+        {
+          "id": "lint:filenames",
+          "type": "filenames",
+          "group": { "id": "fast", "parallel": true, "failFast": true }
+        },
+        {
+          "id": "lint:imports",
+          "type": "imports",
+          "group": { "id": "fast", "parallel": true, "failFast": true }
+        },
+
+        // ── Group `slow` ────────────────────────────────────────────────
+        // Single stage, parallel: false. The runner waits for `fast` to
+        // settle (all green) before starting this group. continueOnError
+        // is false (the default) so a test failure stops the pipeline here.
+        {
+          "id": "test:unit",
+          "type": "command",
+          "group": { "id": "slow", "parallel": false },
+          "alwaysRun": true,
+          "overrides": {
+            "commands": [
+              {
+                "command": ["bun", "run", "test:unit"],
+                "label": "unit tests",
+                "timeoutMs": 300000
+              }
+            ]
+          }
+        }
+      ],
+
+      // Cap concurrency on shared CI runners where 8 parallel stages would
+      // thrash the box. Locally you can override with QUALITY_PARALLEL_LIMIT.
+      "parallelLimit": 4,
+      "reporters": ["summary"]
+    }
+  }
+}

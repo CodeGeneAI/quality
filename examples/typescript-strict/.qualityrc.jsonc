@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
+
+  // Single-package TypeScript-strict library. The pipeline mixes built-in
+  // adapters that catch repo-shape mistakes (filename conventions, import
+  // extensions, unit-test adjacency) with a `command` stage that delegates
+  // the actual type system work to `tsgo --noEmit`.
+  "profiles": {
+    "local": {
+      "pipeline": [
+        // Catches `from "./foo"` where it should be `from "./foo.ts"`,
+        // which strict ESM bundlers and Node 20+ both require.
+        { "id": "lint:imports", "type": "imports" },
+
+        // Enforces `*.unit.spec.ts` / `*.int.spec.ts` over the older
+        // `*.test.ts` / `*.spec.ts` styles. Auto-fixable.
+        { "id": "lint:filenames", "type": "filenames" },
+
+        // Requires every `*.unit.spec.ts` to sit next to its subject file
+        // (not buried in a __tests__ folder). Keeps refactors honest.
+        { "id": "lint:unit-adjacency", "type": "unit-adjacency" },
+
+        // Run the real type checker as the final, slow stage.
+        // alwaysRun forces it to fire even when no source files changed,
+        // because tsgo evaluates the whole graph regardless.
+        {
+          "id": "typecheck",
+          "type": "command",
+          "alwaysRun": true,
+          "overrides": {
+            "commands": [
+              {
+                "command": ["bun", "x", "tsgo", "--noEmit"],
+                "label": "tsgo --noEmit",
+                "timeoutMs": 120000
+              }
+            ],
+            // Keep the reporter quiet on green runs; surface tsgo's full
+            // output only when something breaks.
+            "output": {
+              "showOnSuccess": "none",
+              "showOnFailure": "raw"
+            }
+          }
+        }
+      ],
+      "reporters": ["summary"]
+    }
+  }
+}
