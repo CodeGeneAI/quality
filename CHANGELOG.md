@@ -1,5 +1,12 @@
 # @codegeneai/quality
 
+## [2.2.2](https://github.com/CodeGeneAI/quality/compare/v2.2.1...v2.2.2) (2026-05-16)
+
+
+### Bug Fixes
+
+* **types:** ship @types/micromatch and @types/diff-match-patch as dependencies ([5d33272](https://github.com/CodeGeneAI/quality/commit/5d332726642a3dde125f1ce023bf0266d6c202b2))
+
 ## [2.2.1](https://github.com/CodeGeneAI/quality/compare/v2.2.0...v2.2.1) (2026-05-16)
 
 
