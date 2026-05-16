@@ -25,5 +25,5 @@ jobs:
         run: bun run typecheck
       - name: Unit tests
         run: bun run test:unit
-      - name: CLI smoke test
-        run: bun src/bin.ts --help
+      - name: Self-host quality check
+        run: bun src/bin.ts check --profile ci

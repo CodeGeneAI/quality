@@ -1,0 +1,49 @@
+{
+  "$schema": "./schemas/qualityrc.schema.json",
+
+  // Dogfood: this repo runs its own published CLI against itself as
+  // part of CI. Two stages, both shelled out via the `command`
+  // adapter so we exercise the most-trafficked extension point.
+  "profiles": {
+    "local": {
+      "pipeline": [
+        {
+          "id": "biome",
+          "type": "command",
+          "alwaysRun": true,
+          "overrides": {
+            "commands": [
+              {
+                "command": [
+                  "bun",
+                  "x",
+                  "biome",
+                  "check",
+                  "--diagnostic-level=error"
+                ],
+                "label": "biome check"
+              }
+            ]
+          }
+        },
+        {
+          "id": "typecheck",
+          "type": "command",
+          "alwaysRun": true,
+          "overrides": {
+            "commands": [
+              {
+                "command": ["bun", "x", "tsgo", "--noEmit"],
+                "label": "tsgo --noEmit"
+              }
+            ]
+          }
+        }
+      ],
+      "reporters": ["summary"]
+    },
+    "ci": {
+      "extends": "local"
+    }
+  }
+}
