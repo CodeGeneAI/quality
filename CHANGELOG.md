@@ -1,5 +1,37 @@
 # @codegeneai/quality
 
+## [2.2.0](https://github.com/CodeGeneAI/quality/compare/v2.1.4...v2.2.0) (2026-05-16)
+
+
+### Features
+
+* add dev session logs retention test and implement pruning logic ([c8d5c55](https://github.com/CodeGeneAI/quality/commit/c8d5c55b23cd3864bbb2b223868439a73c3f57ca))
+* add README files for secrets and telemetry packages ([de843c0](https://github.com/CodeGeneAI/quality/commit/de843c0314cad54b9904312a06b379e4cd0ac6ba))
+* add workspace database config parsing ([61a68d4](https://github.com/CodeGeneAI/quality/commit/61a68d423aff043bed5ab78550b8572c6cbe0a67))
+* **auth:** implement real GitHub App installation flow for workspace creation ([#979](https://github.com/CodeGeneAI/quality/issues/979)) ([e8f5ab6](https://github.com/CodeGeneAI/quality/commit/e8f5ab6cd3987df8faf0165fe34b59143c9dbeb6))
+* **build:** Dockerfiles for apps/services/ui + dockerfile-required quality adapter ([#1223](https://github.com/CodeGeneAI/quality/issues/1223)) ([c393850](https://github.com/CodeGeneAI/quality/commit/c393850aad1588091432d406dbf2cb516dce8d5a))
+* enhance MSSQL integration tests and improve connection string parsing ([5a1269e](https://github.com/CodeGeneAI/quality/commit/5a1269ecddc7a87ea97c2cb476ef56e83b302c09))
+* enhance stack-test-runner CLI with auto-dependency resolution options ([c8d5c55](https://github.com/CodeGeneAI/quality/commit/c8d5c55b23cd3864bbb2b223868439a73c3f57ca))
+* enhance structure validation with per-match globbing ([de843c0](https://github.com/CodeGeneAI/quality/commit/de843c0314cad54b9904312a06b379e4cd0ac6ba))
+* implement auto-inference of adapter dependencies in service graph ([c8d5c55](https://github.com/CodeGeneAI/quality/commit/c8d5c55b23cd3864bbb2b223868439a73c3f57ca))
+* implement service environment loader with enhanced secret handling ([4237b72](https://github.com/CodeGeneAI/quality/commit/4237b72bd686094ce1fcb2eae1bc8140b5d3f89b))
+* integrate automatic secrets loading based on environment variables ([4237b72](https://github.com/CodeGeneAI/quality/commit/4237b72bd686094ce1fcb2eae1bc8140b5d3f89b))
+* **quality:** add changeset-guard adapter for pre-push changeset detection ([#841](https://github.com/CodeGeneAI/quality/issues/841)) ([7d88ea3](https://github.com/CodeGeneAI/quality/commit/7d88ea328e9994e0767e7e62d1b4b72ff872b0ee))
+* **quality:** add dotenv-plaintext adapter to flag over-encrypted env vars ([#1219](https://github.com/CodeGeneAI/quality/issues/1219)) ([d7308b6](https://github.com/CodeGeneAI/quality/commit/d7308b699dc436b4b545e3d295ab11c40c5435be))
+* **trigger-migration:** finalize preview and reconcile hard-cut ([#955](https://github.com/CodeGeneAI/quality/issues/955)) ([c942da9](https://github.com/CodeGeneAI/quality/commit/c942da9c81d27fc1cc35d4a350fa14155399c29c))
+* update workspace schema generation and validation instructions; enhance structure adapter glob handling ([d39fca5](https://github.com/CodeGeneAI/quality/commit/d39fca558fceb59a041d5c8f1ee75f6ad5380049))
+
+
+### Bug Fixes
+
+* improve service environment loading to respect existing process environment variables ([c8d5c55](https://github.com/CodeGeneAI/quality/commit/c8d5c55b23cd3864bbb2b223868439a73c3f57ca))
+* **quality:** capture git hook args ([6f641a4](https://github.com/CodeGeneAI/quality/commit/6f641a4f351a71688c8be44a892a33c5e3457dd0))
+* **testing:** stabilize vitest worker behavior ([62f182b](https://github.com/CodeGeneAI/quality/commit/62f182be04b0dc34d911802f17bf47e39af51c16))
+* update environment variables for auth service ([de843c0](https://github.com/CodeGeneAI/quality/commit/de843c0314cad54b9904312a06b379e4cd0ac6ba))
+* update import paths for stack test runner and biome adapters ([ecde13b](https://github.com/CodeGeneAI/quality/commit/ecde13b5275771ff052d4ed9719a2d65ab96a980))
+* update secrets directory structure to include .forge prefix for better organization ([4237b72](https://github.com/CodeGeneAI/quality/commit/4237b72bd686094ce1fcb2eae1bc8140b5d3f89b))
+* update test command syntax in package.json for consistency ([e6b793d](https://github.com/CodeGeneAI/quality/commit/e6b793d2876a56fba0f1a0274e78a602a9bb711f))
+
 ## 2.1.4
 
 ### Patch Changes
