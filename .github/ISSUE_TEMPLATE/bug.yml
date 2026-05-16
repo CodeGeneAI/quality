@@ -1,0 +1,78 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. The more reproducible the report, the faster we can land a fix.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One or two sentences describing what's wrong.
+      placeholder: "`quality check` exits 0 even though one stage failed."
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command you ran
+      description: The exact `quality ...` (or `bun x quality ...`) invocation.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include relevant logs or reporter output. Wrap long output in `<details>` blocks if helpful.
+    validations:
+      required: true
+
+  - type: input
+    id: quality-version
+    attributes:
+      label: "`@codegeneai/quality` version"
+      description: From your `package.json` or `bun pm view @codegeneai/quality version`.
+      placeholder: "2.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: bun-version
+    attributes:
+      label: Bun version
+      description: Output of `bun --version`.
+      placeholder: "1.3.14"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Ubuntu 24.04 / Windows 11 WSL2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: |
+        The smallest `.qualityrc` (and surrounding files, if relevant) that reproduces the issue.
+        A link to a small public repo is even better.
+      render: jsonc
+    validations:
+      required: false

@@ -1,31 +1,73 @@
 # @codegeneai/quality
 
-Unified quality suite for the Platform monorepo. This package provides the pipeline runner, adapters, schema, and CLI surface (`bun x quality …`). Every behaviour of the quality pipeline is expressed through `.qualityrc` files so teams can compose checks without touching TypeScript. Loader discovery supports `.qualityrc.json` and `.qualityrc.jsonc` (JSON/JSONC only).
+> Declarative, schema-driven quality pipeline (lint, format, test orchestration) for monorepos and single packages — built on Bun, written in TypeScript.
+
+[![npm version](https://img.shields.io/npm/v/@codegeneai/quality.svg)](https://www.npmjs.com/package/@codegeneai/quality)
+[![npm downloads](https://img.shields.io/npm/dm/@codegeneai/quality.svg)](https://www.npmjs.com/package/@codegeneai/quality)
+[![CI](https://github.com/CodeGeneAI/quality/actions/workflows/ci.yml/badge.svg)](https://github.com/CodeGeneAI/quality/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Bun](https://img.shields.io/badge/runtime-Bun-fbf0df)](https://bun.sh)
+
+```bash
+bun add -D @codegeneai/quality
+bun x quality init
+bun x quality check
+```
+
+That's it — `quality init` drops a starter `.qualityrc.jsonc` in your repo, and `quality check` runs the pipeline.
+
+<details>
+<summary><strong>Table of contents</strong></summary>
+
+- [Why this exists](#why-this-exists)
+- [Core concepts](#core-concepts)
+- [Getting started](#getting-started)
+- [Shards and profiles](#shards-and-profiles)
+- [Configuration reference](#configuration-reference)
+  - [Files and shards](#files-and-shards)
+  - [Auto-fix defaults](#auto-fix-defaults)
+  - [CLI reference (quality)](#cli-reference-quality)
+  - [Global ignore](#global-ignore)
+  - [Built-in adapters](#built-in-adapters)
+  - [package-catalog](#package-catalog)
+  - [Husky hooks (recommended)](#husky-hooks-recommended)
+  - [Stage specs](#stage-specs)
+  - [Groups & parallel execution](#groups--parallel-execution)
+  - [Command adapter options](#command-adapter-options)
+  - [Extending adapters](#extending-adapters)
+  - [Schema & validation](#schema--validation)
+- [CLI reference](#cli-reference)
+- [Nested configs](#nested-configs)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+</details>
+
+## Why this exists
+
+Most repos end up gluing together `husky`, `lint-staged`, `biome` (or `eslint` + `prettier`), and a stack of bespoke shell scripts to enforce quality before commits and in CI. `@codegeneai/quality` collapses that pile into a single declarative config file: pipelines, profiles (`local`, `pre-commit`, `pre-push`, `ci`), stage adapters, hooks, and reporters all live in `.qualityrc.jsonc`. You compose checks without writing TypeScript, share configuration across monorepo packages via nested configs, and run the same pipeline locally and in CI.
+
+It pairs especially well with Bun and Biome but does not require either at the stage level — any check that can be expressed as a command or implemented as a stage adapter fits.
 
 ## Core concepts
 
 - **Stage adapters** – Modules that implement a single responsibility (import hygiene, filenames, structure, bun-native, command, etc.). Adapters expose metadata (label, description, supported modes) and an execution hook.
 - **Presets** – Named option bundles defined per adapter under `stages.<adapter>.presets`. Presets can extend other presets (single or multiple inheritance) and configure defaults such as groups, modes, hooks, and adapter options.
-- **Profiles** – Named pipelines that order stages, set reporters, and attach hooks. Profiles can extend one another, allowing “local” and “ci” variants with small diffs.
+- **Profiles** – Named pipelines that order stages, set reporters, and attach hooks. Profiles can extend one another, allowing "local" and "ci" variants with small diffs.
 - **Groups** – Stages can join a group to opt into parallel execution, fail-fast semantics, or shared metadata.
 - **Hooks & reporters** – Declarative shell commands that run on start/success/failure, and reporters (summary/json/junit/verbose) that consume pipeline results.
-- **Schema-first** – `packages/quality/schemas/qualityrc.schema.json` models the entire configuration surface so editors and CI can validate configs.
-
-## Shards and profiles
-
-- Base config: `.qualityrc.jsonc` (or `.json`).
-- Profile shards: `.qualityrc.<profile>.jsonc|json` are loaded automatically and merged on top of the base. By default shards live beside the base config; set `"shardDir": "relative/path"` in the base config to load shards from another directory.
-- Example shards: `.qualityrc.local-fast.jsonc`, `.qualityrc.pre-commit.jsonc`, `.qualityrc.pre-push.jsonc`, `.qualityrc.ci.jsonc`.
+- **Schema-first** – A bundled JSON Schema models the entire configuration surface so editors and CI can validate configs.
 
 ## Getting started
 
-1. Ensure dependencies are installed: `bun install` at the repo root.
-2. Generate a starter configuration with the CLI: `bun x quality init`. The stack demonstrates presets, command stages, and grouped adapters.
+1. Install: `bun add -D @codegeneai/quality`.
+2. After installing, run `bun x quality init` in your repo to generate a starter `.qualityrc.jsonc` (the stack demonstrates presets, command stages, and grouped adapters).
 3. Reference the schema inside `.qualityrc` files to enable editor IntelliSense:
 
 ```jsonc
 {
-  "$schema": "./packages/quality/schemas/qualityrc.schema.json",
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
   "stages": {
     "command": {
       "presets": {
@@ -42,9 +84,17 @@ Unified quality suite for the Platform monorepo. This package provides the pipel
 }
 ```
 
+> Editors that support `npm:` schema references (or your monorepo tooling) can also use `"$schema": "npm:@codegeneai/quality/schemas/qualityrc.schema.json"`. The relative `./node_modules/...` path above works everywhere.
+
 Profiles can live entirely in shard files (e.g., `.qualityrc.local.jsonc`, `.qualityrc.pre-push.jsonc`). If the base config omits profiles, the loader discovers shards automatically and defaults to `local` (or a `--profile` override / the first shard found).
 
 Create additional `.qualityrc` files inside packages to extend/override stages for that subtree. The loader walks upward from the file(s) being linted, merging presets, profiles, hooks, and adapter registrations.
+
+## Shards and profiles
+
+- Base config: `.qualityrc.jsonc` (or `.json`).
+- Profile shards: `.qualityrc.<profile>.jsonc|json` are loaded automatically and merged on top of the base. By default shards live beside the base config; set `"shardDir": "relative/path"` in the base config to load shards from another directory.
+- Example shards: `.qualityrc.local-fast.jsonc`, `.qualityrc.pre-commit.jsonc`, `.qualityrc.pre-push.jsonc`, `.qualityrc.ci.jsonc`.
 
 ## Configuration reference
 
@@ -112,10 +162,17 @@ quality check -a  # Explicitly enable auto-fix regardless of profile default
 - command — run arbitrary commands.
 - package-scripts — enforce required scripts in `package.json` files.
 - package-catalog — enforce dependency versions use `catalog:<name>` (or `workspace:`) with optional fix-mode rewrite using the root catalogs map.
+- barrel-exports — enforce barrel-file conventions.
+- biome-config — validate Biome configuration consistency.
+- biome-ignore — keep Biome ignore lists in sync.
+- changeset-guard — guard changeset usage on configured branches.
+- dockerfile-required — require Dockerfiles in selected packages.
+- dotenv-plaintext — flag plaintext secrets in `.env` files.
+- dotenv-secrets — validate dotenvx-encrypted secret files.
 
 ### package-catalog
 
-Ensures dependency versions in targeted `package.json` files use the monorepo catalogs.
+Ensures dependency versions in targeted `package.json` files use shared catalogs (a Bun monorepo feature; safe to skip in single-package repos).
 
 Options:
 
@@ -142,9 +199,9 @@ Example stage:
       "packages/*/*/*/package.json",
       "services/*/package.json",
       "apps/*/package.json",
-      "!packages/platform-stacks/stacks/**/package.json"
+      "!packages/example/stacks/**/package.json"
     ],
-    "allowlist": ["@codegeneai/*"]
+    "allowlist": ["@your-scope/*"]
   }
 }
 ```
@@ -173,7 +230,7 @@ bun x quality check --profile pre-push --files-mode workspace --reporter summary
 
 Setup steps:
 
-1. `bun add -D husky` (already in this repo’s devDependencies).
+1. `bun add -D husky`.
 2. Add `"prepare": "husky install"` to `package.json` so fresh installs create `.husky/`.
 3. Commit the `.husky/*` hook files alongside your `.qualityrc` profiles.
 
@@ -259,7 +316,7 @@ underlying command is noisy. Set `QUALITY_SHOW_ALL_OUTPUT=1` or pass
 Add custom adapters by exporting modules that return a `StageAdapter`:
 
 ```ts
-// packages/tools/quality/custom-adapter.ts
+// tools/quality/custom-adapter.ts
 import type { StageAdapter } from "@codegeneai/quality";
 
 export const greetAdapter: StageAdapter<{ message?: string }> = {
@@ -280,8 +337,8 @@ Reference the module path from `.qualityrc`:
 
 ```jsonc
 {
-  "$schema": "./packages/quality/schemas/qualityrc.schema.json",
-  "adapters": ["./packages/tools/quality/custom-adapter.ts"],
+  "$schema": "./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json",
+  "adapters": ["./tools/quality/custom-adapter.ts"],
   "profiles": {
     "local": {
       "pipeline": [
@@ -296,13 +353,13 @@ The loader resolves module paths relative to the config file, registers adapters
 
 ### Schema & validation
 
-`packages/quality/schemas/qualityrc.schema.json` describes:
+The bundled JSON Schema (`@codegeneai/quality/schemas/qualityrc.schema.json`) describes:
 
 - Root keys (`$schema`, `adapters`, `stages`, `profiles`, `reporters`, `hooks`).
 - Built-in adapter option specs (imports/bun-native/filenames/structure/no-root-barrel/command).
 - Group metadata, parallel semantics, and hook specs.
 
-Unit tests use a vendored JSON Schema validator to ensure sample `.qualityrc` files remain compliant. Point editors at the relative schema path or host the schema at `$id` for global distribution.
+Unit tests use a vendored JSON Schema validator to ensure sample `.qualityrc` files remain compliant. Point editors at the relative schema path (`./node_modules/@codegeneai/quality/schemas/qualityrc.schema.json`) or host the schema at `$id` for global distribution.
 
 ## CLI reference
 
@@ -327,7 +384,7 @@ Highlights:
 - `quality validate-config` outputs the merged profile JSON, or a specific stage via `--stage`.
 - `quality run --stage` executes a single stage ad-hoc (useful for command adapters or debugging).
 - `--reporter` can be repeated; `--json <path>` adds the JSON reporter automatically.
-- Use Husky to wire git hooks to the profiles you define (see Husky section below); the quality CLI no longer manages .git/hooks directly.
+- Use Husky to wire git hooks to the profiles you define (see Husky section above); the quality CLI does not manage `.git/hooks` directly.
 
 ## Nested configs
 
@@ -342,11 +399,26 @@ Adapters declared in nested configs are registered automatically.
 
 ## Development
 
-- Type check: `bun --filter @codegeneai/quality typecheck`
-- Lint: `bun --filter @codegeneai/quality lint`
-- Unit tests: `bun --filter @codegeneai/quality test:unit`
-- Avoid `bun test`; it runs an unintended scope. Always execute `bun run test:unit` (or `bun --filter @codegeneai/quality test:unit`) for reliable results.
+```bash
+git clone https://github.com/CodeGeneAI/quality.git
+cd quality
+bun install
+bun run test:unit
+```
+
+- Type check: `bun run typecheck`
+- Lint: `bun run lint`
+- Unit tests: `bun run test:unit`
+- Avoid `bun test`; it runs an unintended scope. Always execute `bun run test:unit` for reliable results.
 
 Tests live alongside the source (e.g., `src/pipeline/runner.unit.test.ts`). Fixtures under `test/fixtures/**` exercise loader behaviours, preset inheritance, and schema validation.
 
-Run `quality check` before publishing changes to ensure reporters, hooks, and adapters remain functional across the monorepo.
+Run `quality check` before publishing changes to ensure reporters, hooks, and adapters remain functional.
+
+## Contributing
+
+Contributions are welcome — see [`CONTRIBUTING.md`](./CONTRIBUTING.md) for setup, conventional-commit conventions, and how to add a new stage adapter. Security issues should be reported privately via [GitHub Security Advisories](https://github.com/CodeGeneAI/quality/security/advisories/new) — see [`SECURITY.md`](./SECURITY.md).
+
+## License
+
+[MIT](./LICENSE) © CodeGeneAI
