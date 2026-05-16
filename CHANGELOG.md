@@ -1,5 +1,12 @@
 # @codegeneai/quality
 
+## [2.2.1](https://github.com/CodeGeneAI/quality/compare/v2.2.0...v2.2.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* **cli:** correct init template's $schema path and drop noisy docs:check stage ([ded0ac9](https://github.com/CodeGeneAI/quality/commit/ded0ac9d3f1956dbfdada3f355098deb42c96c02))
+
 ## [2.2.0](https://github.com/CodeGeneAI/quality/compare/v2.1.4...v2.2.0) (2026-05-16)
 
 
