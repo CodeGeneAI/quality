@@ -116,8 +116,8 @@ Create additional `.qualityrc` files inside packages to extend/override stages f
   "profiles": {
     "local": {
       "pipeline": [
-        "lint:imports",
-        "lint:structure"
+        { "id": "lint:imports", "type": "imports" },
+        { "id": "lint:structure", "type": "structure" }
       ],
       "autoFix": true // Enable auto-fix by default
     }

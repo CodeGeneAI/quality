@@ -21,13 +21,23 @@ Library authors who treat TypeScript strictness as a non-negotiable, want
 fast structural lints before a slow type check, and prefer one tool over
 juggling `tsc`, eslint, and a hand-written check script.
 
+## Prerequisites
+
+Install both `@codegeneai/quality` and `@typescript/native-preview` as dev
+dependencies:
+
+```bash
+bun add -D @codegeneai/quality @typescript/native-preview
+```
+
+The `typecheck` stage shells out to `bun x tsgo --noEmit`, and the `tsgo`
+binary ships in `@typescript/native-preview` — it is not pulled in
+transitively by `@codegeneai/quality`, so you must install it explicitly.
+
 ## How to use
 
 1. Copy `.qualityrc.jsonc` to the root of your repo.
-2. Install the package and tsgo:
-   ```bash
-   bun add -D @codegeneai/quality @typescript/native-preview
-   ```
+2. Install the prerequisites listed above.
 3. Run the pipeline:
    ```bash
    bun x quality check

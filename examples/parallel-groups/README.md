@@ -37,18 +37,38 @@ Teams whose pipeline is starting to feel slow on CI and who want to
 trade a bit of config complexity for a noticeably faster green-build
 loop.
 
+## Prerequisites
+
+The `slow` group's `test:unit` stage runs `bun run test:unit`, which means
+your `package.json` must define a `test:unit` script. A minimal entry:
+
+```jsonc
+{
+  "scripts": {
+    "test:unit": "bun test"
+  }
+}
+```
+
+Substitute whatever command actually runs your unit tests (e.g.
+`vitest run`, `jest`, a custom script). If your project uses a different
+command for unit tests, edit `.qualityrc.jsonc` to point at it directly
+or keep the indirection through `package.json` — either works.
+
 ## How to use
 
 1. Copy `.qualityrc.jsonc` to the root of your repo.
-2. Install the package:
+2. Make sure the prerequisites above are satisfied (a `test:unit` script
+   in your `package.json`).
+3. Install the package:
    ```bash
    bun add -D @codegeneai/quality
    ```
-3. Run the pipeline:
+4. Run the pipeline:
    ```bash
    bun x quality check
    ```
-4. (Optional) Cap concurrency at the command line for a constrained CI
+5. (Optional) Cap concurrency at the command line for a constrained CI
    runner:
    ```bash
    QUALITY_PARALLEL_LIMIT=2 bun x quality check
