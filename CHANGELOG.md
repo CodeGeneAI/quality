@@ -1,5 +1,12 @@
 # @codegeneai/quality
 
+## [2.2.3](https://github.com/CodeGeneAI/quality/compare/v2.2.2...v2.2.3) (2026-06-11)
+
+
+### Bug Fixes
+
+* **pipeline:** skip full scans for partial pre-commit runs ([e1de063](https://github.com/CodeGeneAI/quality/commit/e1de0637eadc341bcb680f2f5c30567fd6b27ae9))
+
 ## 2.2.3
 
 ### Patch Changes
