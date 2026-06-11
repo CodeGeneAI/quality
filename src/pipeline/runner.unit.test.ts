@@ -54,6 +54,16 @@ const checkOnlyAdapter: StageAdapter = {
   },
 };
 
+const partialAwareAdapter: StageAdapter = {
+  type: "partial-aware",
+  label: "Partial-aware stage",
+  supportsPartialFiles: true,
+  async run(context) {
+    observedFiles.set(context.stage.id, context.files);
+    return { status: "passed" };
+  },
+};
+
 const createConfig = (
   stages: readonly ResolvedStage[],
   hooks?: Parameters<typeof ensureHooks>[0],
@@ -95,6 +105,7 @@ beforeEach(() => {
   resetAdapters();
   registerAdapter(stubAdapter);
   registerAdapter(checkOnlyAdapter);
+  registerAdapter(partialAwareAdapter);
 });
 
 afterEach(() => {
@@ -652,6 +663,31 @@ describe("runPipeline", () => {
     });
 
     expect(observedFiles.get("stage:files")).toEqual(["src/index.ts"]);
+  });
+
+  it("skips partial-aware stages when explicit files match no stage patterns", async () => {
+    const stages = [
+      createStage({
+        id: "stage:partial-aware",
+        type: "partial-aware",
+        files: ["src/**/*.ts"],
+      }),
+    ];
+    const config = createConfig(stages);
+
+    const result = await runPipeline({
+      mode: "check",
+      files: [".changeset/example.md"],
+      config,
+      reporterSpecs: [],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stages[0]).toMatchObject({
+      id: "stage:partial-aware",
+      status: "skipped",
+    });
+    expect(observedFiles.has("stage:partial-aware")).toBe(false);
   });
 
   it("does not drop files that only match built-in defaults", async () => {

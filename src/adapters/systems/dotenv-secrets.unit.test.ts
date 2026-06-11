@@ -8,7 +8,12 @@ import { dotenvSecretsAdapter } from "./dotenv-secrets";
 const createTempWorkspace = async (): Promise<string> =>
   mkdtemp(join(tmpdir(), "quality-dotenv-secrets-"));
 
-const runAdapter = async (root: string, options: DotenvSecretsAdapterOptions) =>
+const runAdapter = async (
+  root: string,
+  options: DotenvSecretsAdapterOptions,
+  files: readonly string[] = [],
+  hasExplicitFileSelection = files.length > 0,
+) =>
   dotenvSecretsAdapter.run({
     mode: "check",
     pipelineMode: "check",
@@ -21,7 +26,8 @@ const runAdapter = async (root: string, options: DotenvSecretsAdapterOptions) =>
     },
     root,
     options,
-    files: [],
+    files,
+    hasExplicitFileSelection,
     ignore: [],
     abortSignal: new AbortController().signal,
   });
@@ -206,6 +212,54 @@ describe("dotenv-secrets adapter", () => {
         files: ["**/.env.production"],
       });
       expect(result.status).toBe("passed");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("does not scan workspace env files for unrelated explicit partial input", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeEnvFile(
+        root,
+        "services/auth/.env.production",
+        'AUTH_SIGNING_PRIVATE_KEY_PEM="actual-private-key-content"',
+      );
+
+      const result = await runAdapter(
+        root,
+        {
+          files: ["**/.env.production"],
+        },
+        [".changeset/example.md"],
+      );
+
+      expect(result.status).toBe("passed");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("checks matching env files from explicit partial input", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeEnvFile(
+        root,
+        "services/auth/.env.production",
+        'AUTH_SIGNING_PRIVATE_KEY_PEM="actual-private-key-content"',
+      );
+
+      const result = await runAdapter(
+        root,
+        {
+          files: ["**/.env.production"],
+        },
+        ["services/auth/.env.production"],
+      );
+
+      expect(result.status).toBe("failed");
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages![0]).toContain("AUTH_SIGNING_PRIVATE_KEY_PEM");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
