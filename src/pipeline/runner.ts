@@ -592,6 +592,20 @@ const executeStage = async (
     context.ignore,
     context.globCache,
   );
+  const hasExplicitFileSelection = context.files.length > 0;
+  if (
+    hasExplicitFileSelection &&
+    stageFiles.length === 0 &&
+    adapter.supportsPartialFiles === true &&
+    buildStageMatchPatterns(stage).length > 0
+  ) {
+    return {
+      summary: createStageResult(stage, "skipped", 0, [
+        "No explicit files matched this stage.",
+      ]),
+      shouldHalt: false,
+    } satisfies StageExecutionOutcome;
+  }
   const start = performance.now();
   let result: StageExecutionResult;
   try {
@@ -601,6 +615,7 @@ const executeStage = async (
       mode: stageMode,
       stage,
       files: stageFiles,
+      hasExplicitFileSelection,
       options: stage.options ?? {},
       abortSignal: signal,
       ignore: context.ignore,

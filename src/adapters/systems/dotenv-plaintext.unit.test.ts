@@ -11,6 +11,8 @@ const createTempWorkspace = async (): Promise<string> =>
 const runAdapter = async (
   root: string,
   options: DotenvPlaintextAdapterOptions,
+  files: readonly string[] = [],
+  hasExplicitFileSelection = files.length > 0,
 ) =>
   dotenvPlaintextAdapter.run({
     mode: "check",
@@ -24,7 +26,8 @@ const runAdapter = async (
     },
     root,
     options,
-    files: [],
+    files,
+    hasExplicitFileSelection,
     ignore: [],
     abortSignal: new AbortController().signal,
   });
@@ -345,6 +348,54 @@ describe("dotenv-plaintext adapter", () => {
         files: ["**/.env.production"],
       });
       expect(result.status).toBe("passed");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("does not scan workspace env files for unrelated explicit partial input", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeEnvFile(
+        root,
+        "apps/web/.env.production",
+        'NEXT_PUBLIC_APP_URL="encrypted:BMxxxbase64=="',
+      );
+
+      const result = await runAdapter(
+        root,
+        {
+          files: ["**/.env.production"],
+        },
+        [".changeset/example.md"],
+      );
+
+      expect(result.status).toBe("passed");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("checks matching env files from explicit partial input", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeEnvFile(
+        root,
+        "apps/web/.env.production",
+        'NEXT_PUBLIC_APP_URL="encrypted:BMxxxbase64=="',
+      );
+
+      const result = await runAdapter(
+        root,
+        {
+          files: ["**/.env.production"],
+        },
+        ["apps/web/.env.production"],
+      );
+
+      expect(result.status).toBe("failed");
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages![0]).toContain("NEXT_PUBLIC_APP_URL");
     } finally {
       await rm(root, { recursive: true, force: true });
     }

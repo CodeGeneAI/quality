@@ -170,6 +170,12 @@ quality check -a  # Explicitly enable auto-fix regardless of profile default
 - dotenv-plaintext — flag plaintext secrets in `.env` files.
 - dotenv-secrets — validate dotenvx-encrypted secret files.
 
+Adapters that support partial file input honour `--files` and profile-level
+`filesMode` selections. In pre-commit profiles, `biome-ignore`,
+`dotenv-plaintext`, and `dotenv-secrets` inspect only matching staged files and
+skip quickly when unrelated files are staged, while workspace/CI profiles still
+perform their configured full scans.
+
 ### package-catalog
 
 Ensures dependency versions in targeted `package.json` files use shared catalogs (a Bun monorepo feature; safe to skip in single-package repos).

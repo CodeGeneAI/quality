@@ -1,3 +1,4 @@
+import micromatch from "micromatch";
 import fg from "../../utils/bun-glob";
 import {
   ENCRYPTED_PREFIX,
@@ -5,7 +6,7 @@ import {
   parseEnvFile,
 } from "../../utils/dotenv-parse";
 import { readTextFile } from "../../utils/fs";
-import { mergeIgnorePatterns } from "../../utils/glob";
+import { mergeIgnorePatterns, shouldIgnorePath } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
 import type { StageAdapter } from "../types";
 
@@ -66,6 +67,35 @@ function matchesSecretPattern(
   return patterns.some((pattern) => upper.includes(pattern.toUpperCase()));
 }
 
+async function resolveEnvFiles({
+  root,
+  fileGlobs,
+  files,
+  ignorePatterns,
+  hasExplicitFileSelection,
+}: {
+  readonly root: string;
+  readonly fileGlobs: readonly string[];
+  readonly files: readonly string[];
+  readonly ignorePatterns: readonly string[];
+  readonly hasExplicitFileSelection: boolean;
+}): Promise<string[]> {
+  if (hasExplicitFileSelection) {
+    return micromatch(
+      files.filter((file) => !shouldIgnorePath(file, ignorePatterns)),
+      fileGlobs,
+      { dot: true },
+    ).sort((left, right) => left.localeCompare(right));
+  }
+
+  return fg(Array.from(fileGlobs), {
+    cwd: root,
+    dot: true,
+    unique: true,
+    ignore: [...ignorePatterns],
+  });
+}
+
 export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
   type: "dotenv-secrets",
   label: "Dotenv secret encryption guard",
@@ -73,7 +103,7 @@ export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
     "Prevents committing plaintext secrets in .env files. Values must be encrypted or explicitly allowlisted.",
   supportsModes: ["check", "report"],
   supportsSandbox: true,
-  supportsPartialFiles: false,
+  supportsPartialFiles: true,
 
   async run(context) {
     const options = context.options ?? {};
@@ -91,11 +121,12 @@ export const dotenvSecretsAdapter: StageAdapter<DotenvSecretsAdapterOptions> = {
       context.ignore,
     );
 
-    const envFiles = await fg(Array.from(fileGlobs), {
-      cwd: context.root,
-      dot: true,
-      unique: true,
-      ignore: [...ignorePatterns],
+    const envFiles = await resolveEnvFiles({
+      root: context.root,
+      fileGlobs,
+      files: context.files,
+      ignorePatterns,
+      hasExplicitFileSelection: context.hasExplicitFileSelection === true,
     });
 
     const failures: string[] = [];

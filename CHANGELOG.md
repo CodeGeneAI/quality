@@ -1,5 +1,14 @@
 # @codegeneai/quality
 
+## 2.2.3
+
+### Patch Changes
+
+- Speed up partial-file pre-commit runs by skipping partial-aware stages when
+  staged files do not match the stage, and by teaching `biome-ignore`,
+  `dotenv-secrets`, and `dotenv-plaintext` to avoid full workspace scans for
+  unrelated explicit file selections.
+
 ## [2.2.2](https://github.com/CodeGeneAI/quality/compare/v2.2.1...v2.2.2) (2026-05-16)
 
 

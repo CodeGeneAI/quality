@@ -7,6 +7,7 @@ export interface StageExecutionContext<TOptions = unknown> {
   readonly mode: QualityMode | "report";
   readonly stage: ResolvedStage<TOptions>;
   readonly files: readonly string[];
+  readonly hasExplicitFileSelection?: boolean;
   readonly options: TOptions;
   readonly abortSignal: AbortSignal;
   readonly ignore: readonly string[];

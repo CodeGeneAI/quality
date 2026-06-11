@@ -13,6 +13,7 @@ const runAdapter = async (
   options: BiomeIgnoreAdapterOptions = {},
   mode: "check" | "fix" = "check",
   files: readonly string[] = [],
+  hasExplicitFileSelection = files.length > 0,
 ) =>
   biomeIgnoreAdapter.run({
     mode,
@@ -27,6 +28,7 @@ const runAdapter = async (
     root,
     options,
     files,
+    hasExplicitFileSelection,
     ignore: [],
     abortSignal: new AbortController().signal,
   });
@@ -261,6 +263,22 @@ describe("biome-ignore adapter", () => {
 
       expect(result.status).toBe("failed");
       expect(result.messages?.length).toBe(2);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("does not fall back to a full scan for explicit empty partial input", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(
+        join(root, "hidden.ts"),
+        "// eslint-disable-next-line\nconst hidden = 1;\n",
+      );
+
+      const result = await runAdapter(root, {}, "check", [], true);
+
+      expect(result.status).toBe("passed");
     } finally {
       await rm(root, { recursive: true, force: true });
     }

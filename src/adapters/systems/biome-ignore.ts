@@ -66,8 +66,9 @@ const resolveFiles = async (
   root: string,
   files: readonly string[],
   ignorePatterns: readonly string[],
+  hasExplicitFileSelection: boolean,
 ): Promise<string[]> => {
-  if (files.length > 0) {
+  if (hasExplicitFileSelection) {
     return files.filter((file) => !shouldIgnorePath(file, ignorePatterns));
   }
   const matches = fg.sync(FILE_GLOB, {
@@ -104,6 +105,7 @@ export const biomeIgnoreAdapter: StageAdapter<BiomeIgnoreAdapterOptions> = {
       context.root,
       context.files,
       ignorePatterns,
+      context.hasExplicitFileSelection === true,
     );
     const allViolations: Violation[] = [];
     let fixedCount = 0;
