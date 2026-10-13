@@ -57,7 +57,7 @@ jobs:
             gh pr merge "$pr_number" --auto --squash --repo "$GH_REPO"
           fi
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: ${{ steps.release-please.outputs.release_created }}
 
       - uses: actions/setup-node@v7
