@@ -1,5 +1,12 @@
 # @codegeneai/quality
 
+## [2.2.4](https://github.com/CodeGeneAI/quality/compare/v2.2.3...v2.2.4) (2026-11-07)
+
+
+### Performance Improvements
+
+* **biome-ignore:** compile glob exclusions once and skip files without a directive ([#17](https://github.com/CodeGeneAI/quality/issues/17)) ([7059bfb](https://github.com/CodeGeneAI/quality/commit/7059bfb9229cf03699889c5fc27035b1433dd28c))
+
 ## [2.2.3](https://github.com/CodeGeneAI/quality/compare/v2.2.2...v2.2.3) (2026-06-11)
 
 
