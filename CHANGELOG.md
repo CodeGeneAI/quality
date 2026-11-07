@@ -1,5 +1,12 @@
 # @codegeneai/quality
 
+## [2.2.5](https://github.com/CodeGeneAI/quality/compare/v2.2.4...v2.2.5) (2026-11-07)
+
+
+### Bug Fixes
+
+* **biome-ignore:** report ESLint directives in real comments only ([#18](https://github.com/CodeGeneAI/quality/issues/18)) ([db30f69](https://github.com/CodeGeneAI/quality/commit/db30f6902acfa536a21007097446c1edced8c731))
+
 ## [2.2.4](https://github.com/CodeGeneAI/quality/compare/v2.2.3...v2.2.4) (2026-11-07)
 
 
