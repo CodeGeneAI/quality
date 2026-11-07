@@ -6,6 +6,10 @@ import {
   shouldIgnorePath,
 } from "../../utils/glob";
 import { joinPaths } from "../../utils/path";
+import {
+  type CommentProbe,
+  createCommentProbe,
+} from "../../utils/source-comments";
 import type { StageAdapter } from "../types";
 
 const DEFAULT_IGNORE_PATTERNS = DEFAULT_GLOB_IGNORE;
@@ -155,15 +159,29 @@ export const biomeIgnoreAdapter: StageAdapter<BiomeIgnoreAdapterOptions> = {
       const lines = content.split("\n");
       const fileViolations: Violation[] = [];
 
+      let probe: CommentProbe | undefined;
+      let lineStart = 0;
+
       lines.forEach((line, index) => {
+        const offset = lineStart;
+        lineStart += line.length + 1;
+
         const match = line.match(ESLINT_DIRECTIVE_REGEX);
-        if (!match) return;
+        if (!match || match.index === undefined) return;
 
         const directive = match[1];
         const rules = match[2]?.trim();
 
         const fileAllow = allowlist.get(file) ?? allowlist.get("*");
         if (fileAllow?.has(directive)) return;
+
+        // A directive is a comment; the same text in a string, template
+        // literal, regular expression or JSX text is not one (ESLint reads
+        // directives from comments only).
+        probe ??= createCommentProbe(file, content);
+        const directiveOffset =
+          offset + match.index + match[0].indexOf(directive);
+        if (!probe(directiveOffset, directive.length)) return;
 
         fileViolations.push({
           file,

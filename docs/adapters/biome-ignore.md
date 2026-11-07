@@ -15,6 +15,18 @@ reports each occurrence; in `fix` mode it rewrites
 `// biome-ignore lint:` form, preserving indentation and the disable
 reason.
 
+Only comments count, as for ESLint itself, which reads its directives
+from comments. The same text inside a string, a template literal, a
+regular expression or JSX text (a test fixture, a code generator, docs
+rendered from code) is neither reported nor rewritten. The adapter asks
+Bun's transpiler, which drops comments and keeps everything else: a
+directive whose characters can be blanked without changing the
+transpiled output is a comment. When it cannot tell (a file the
+transpiler cannot parse, an extension other than `.ts`, `.tsx`, `.mts`,
+`.cts`, `.js`, `.jsx`, `.mjs` or `.cjs`, or a string literal type, which
+the transpiler erases like a comment), the directive is reported, as a
+plain text match would.
+
 `eslint-disable` and `eslint-enable` (block-style) are reported but not
 auto-fixed — their block semantics don't map cleanly to Biome's
 per-line model and need a human eye.
