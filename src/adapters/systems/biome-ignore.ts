@@ -1,3 +1,4 @@
+import { readFileSync, statSync } from "node:fs";
 import fg from "../../utils/bun-glob";
 import {
   DEFAULT_GLOB_IGNORE,
@@ -62,6 +63,35 @@ const buildReplacement = (
   return `${indent}// biome-ignore lint: ${reason}`;
 };
 
+const isBom = (bytes: Uint8Array): boolean =>
+  bytes.length >= 2 &&
+  ((bytes[0] === 0xff && bytes[1] === 0xfe) ||
+    (bytes[0] === 0xfe && bytes[1] === 0xff));
+
+// Every directive ESLINT_DIRECTIVE_REGEX matches contains the ASCII text
+// "eslint-", which UTF-8 decoding leaves intact and never produces from other
+// bytes, so a regular file whose raw bytes lack it has no violation to report
+// or fix and is not decoded. The awaited `Bun.file().text()` per file was 2.5
+// of this stage's 5.9 CPU seconds over the CodeGene platform monorepo's 26,841 source files,
+// against 0.3 s for the same files read synchronously (CPU profile and
+// measurement 2026-10-30). Only that case is decided here. Anything else
+// (a path that is not a regular file, a read that fails, a file that starts
+// with a UTF-16 byte order mark, which `Bun.file().text()` decodes as UTF-16
+// so its ASCII letters are not in its bytes) answers `true` and goes the way
+// it always went, so the stage's verdict, errors and fixes for those inputs
+// are the published ones.
+const mayHoldDirective = (absolutePath: string): boolean => {
+  try {
+    if (!statSync(absolutePath).isFile()) {
+      return true;
+    }
+    const bytes = readFileSync(absolutePath);
+    return isBom(bytes) || bytes.includes("eslint-");
+  } catch {
+    return true;
+  }
+};
+
 const resolveFiles = async (
   root: string,
   files: readonly string[],
@@ -112,6 +142,9 @@ export const biomeIgnoreAdapter: StageAdapter<BiomeIgnoreAdapterOptions> = {
 
     for (const file of files) {
       const absolutePath = joinPaths(context.root, file);
+      if (!mayHoldDirective(absolutePath)) {
+        continue;
+      }
       const bunFile = Bun.file(absolutePath);
 
       if (!(await bunFile.exists())) {
